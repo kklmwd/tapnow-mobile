@@ -241,6 +241,7 @@ test('fal 401 tells the user to replace the key; a half key is flagged in Settin
   await expect(page.getByTestId('key-problem')).toContainText('id:secret');
   await page.getByTestId('fal-key').fill(' Key test-id:test-secret ');
   await expect(page.getByTestId('key-problem')).toHaveCount(0);
+  await expect(page.getByTestId('key-summary')).toHaveText('Saved key: 19 characters, id:secret form (id 7, secret 11 characters).');
   await page.getByTestId('settings').getByRole('button', { name: 'Done' }).tap();
   await page.getByTestId('node-image').tap();
   await page.getByTestId('generate').tap();

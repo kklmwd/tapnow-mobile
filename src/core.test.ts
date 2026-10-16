@@ -3,7 +3,7 @@ import type { Edge } from '@xyflow/react';
 import { canConnect, resolveInputs, upstreamPending, wouldCycle, type FlowNode } from './graph';
 import { endpointFor, getModel, MODELS } from './models';
 import type { NodeData } from './types';
-import { cleanKey, errorMessage, keyProblem } from './providers/fal';
+import { cleanKey, errorMessage, keyProblem, keySummary } from './providers/fal';
 import { afterReload, INTERRUPTED } from './reload';
 
 const node = (id: string, kind: NodeData['kind'], extra: Partial<NodeData> = {}): FlowNode => ({
@@ -149,6 +149,12 @@ describe('fal key handling', () => {
     expect(keyProblem('')).toBeNull();
     expect(keyProblem('justsecret')).toMatch(/two parts/);
     expect(keyProblem('abc:')).toMatch(/incomplete/);
+  });
+  it('summarises a key by length and shape only, never its characters', () => {
+    const k = 'abcd-1234:secretsecret';
+    expect(keySummary(k)).toBe('Saved key: 22 characters, id:secret form (id 9, secret 12 characters).');
+    expect(keySummary('onlyone')).toBe('Saved key: 7 characters, not in id:secret form.');
+    expect(keySummary(k)).not.toMatch(/abcd|secretsecret/);
   });
   it('explains a 401 in plain words', () => {
     const e = Object.assign(new Error(''), { status: 401, body: { detail: 'Authentication is required to access this application.' } });

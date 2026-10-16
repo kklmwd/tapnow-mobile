@@ -85,6 +85,14 @@ export function keyProblem(key: string): string | null {
   return null;
 }
 
+/** Describe a key without revealing any of it: length and shape only. */
+export function keySummary(key: string): string {
+  if (!key) return 'No key saved.';
+  const [id, secret] = key.split(':');
+  const shape = keyProblem(key) ? 'not in id:secret form' : `id:secret form (id ${id.length}, secret ${secret.length} characters)`;
+  return `Saved key: ${key.length} characters, ${shape}.`;
+}
+
 /** Upload a data/blob URL to fal storage and return a public URL. */
 export async function uploadToFal(url: string, key: string): Promise<string> {
   if (!key) throw new Error('Add your fal.ai key in Settings first.');

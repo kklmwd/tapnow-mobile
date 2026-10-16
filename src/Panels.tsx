@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MODELS } from './models';
-import { cleanKey, keyProblem } from './providers/fal';
+import { cleanKey, keyProblem, keySummary } from './providers/fal';
 import { useStore } from './store';
 import type { Asset } from './types';
 
@@ -96,6 +96,7 @@ export function SettingsPanel() {
     <div className="sheet tall" role="dialog" aria-label="Settings" data-testid="settings">
       <div className="sheet-head">
         <strong>Settings</strong>
+        <small data-testid="build">build {__BUILD__}</small>
         <button className="icon-btn" onClick={() => setPanel(null)}>
           Done
         </button>
@@ -125,6 +126,7 @@ export function SettingsPanel() {
           data-testid="fal-key"
           onChange={(e) => setSettings({ falKey: cleanKey(e.target.value) })}
         />
+        <small data-testid="key-summary">{keySummary(settings.falKey)}</small>
         {keyProblem(settings.falKey) && (
           <div className="err-line" data-testid="key-problem">
             {keyProblem(settings.falKey)}
