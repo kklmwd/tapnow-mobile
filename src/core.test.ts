@@ -4,6 +4,7 @@ import { canConnect, resolveInputs, upstreamPending, wouldCycle, type FlowNode }
 import { endpointFor, getModel, MODELS } from './models';
 import type { NodeData } from './types';
 import { errorMessage } from './providers/fal';
+import { afterReload, INTERRUPTED } from './reload';
 
 const node = (id: string, kind: NodeData['kind'], extra: Partial<NodeData> = {}): FlowNode => ({
   id,
@@ -121,5 +122,19 @@ describe('graph', () => {
     ];
     const edges = [edge('i1', 'i2'), edge('i2', 'v'), edge('i3', 'v')];
     expect(upstreamPending(nodes, edges, 'v')).toEqual(['i1', 'i2']);
+  });
+});
+
+describe('afterReload', () => {
+  const d = (extra: Partial<NodeData>) => node('n', 'image', extra).data;
+  it('never leaves a run silently idle: no fal job yet means a visible error', () => {
+    expect(afterReload(d({ status: 'running', log: 'Sending to fal' }))).toMatchObject({ status: 'error', error: INTERRUPTED });
+  });
+  it('keeps a queued fal job running so it can be resumed', () => {
+    const pending = { endpoint: 'fal-ai/nano-banana-pro', requestId: 'r1', prompt: 'p' };
+    expect(afterReload(d({ status: 'running', pending }))).toMatchObject({ status: 'running', pending });
+  });
+  it('leaves finished nodes alone', () => {
+    expect(afterReload(d({ status: 'error', error: 'x' }))).toMatchObject({ status: 'error', error: 'x' });
   });
 });

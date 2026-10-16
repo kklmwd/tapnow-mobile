@@ -174,3 +174,56 @@ test('fal rejection shows a readable reason, not a blank error', async ({ page }
   await expect(page.getByRole('alert')).toContainText('Exhausted balance', { timeout: 15_000 });
   await shot(page, '06-fal-403');
 });
+
+const goLive = async (page: Page) => {
+  await page.getByTestId('mode-chip').tap();
+  await page.getByRole('button', { name: 'fal.ai (real)' }).tap();
+  await page.getByTestId('fal-key').fill('test-id:test-secret');
+  await page.getByTestId('settings').getByRole('button', { name: 'Done' }).tap();
+};
+
+test('a fal job survives a page reload and its image still arrives', async ({ page }) => {
+  let done = false;
+  const seen: string[] = [];
+  await page.route(/fal\.(run|ai)/, (route) => {
+    const req = route.request();
+    const u = req.url();
+    seen.push(`${req.method()} ${u}`);
+    const json = (body: unknown) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    if (req.method() === 'POST')
+      return json({
+        request_id: 'r9',
+        status: 'IN_QUEUE',
+        status_url: 'https://queue.fal.run/fal-ai/nano-banana-pro/requests/r9/status',
+        response_url: 'https://queue.fal.run/fal-ai/nano-banana-pro/requests/r9',
+      });
+    if (u.includes('/status')) return json({ status: done ? 'COMPLETED' : 'IN_PROGRESS', request_id: 'r9', logs: [] });
+    return json({ images: [{ url: 'https://example.invalid/resumed.png' }], description: '' });
+  });
+  await goLive(page);
+  await page.getByTestId('node-image').tap();
+  await page.getByTestId('generate').tap();
+  await expect(page.getByTestId('generate')).toHaveText('Generating', { timeout: 15_000 });
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__store.getState().nodes.find((n: any) => n.id === 'seed-image').data.pending?.requestId))
+    .toBe('r9');
+
+  // Phone discards the background tab, user comes back.
+  await page.reload();
+  done = true;
+  await expect(page.getByTestId('node-image').locator('img')).toHaveAttribute('src', /resumed\.png/, { timeout: 15_000 });
+  expect(seen.filter((s) => s.startsWith('POST'))).toHaveLength(1); // resumed, not re-submitted (billed once)
+  await shot(page, '07-fal-resumed');
+});
+
+test('a reload before fal queues the job shows Interrupted, not a blank node', async ({ page }) => {
+  await page.route(/fal\.(run|ai)/, () => {
+    /* never answer: the submit is still in flight when the page reloads */
+  });
+  await goLive(page);
+  await page.getByTestId('node-image').tap();
+  await page.getByTestId('generate').tap();
+  await expect(page.getByTestId('generate')).toHaveText('Sending to fal', { timeout: 15_000 });
+  await page.reload();
+  await expect(page.getByTestId('node-image')).toContainText('Interrupted', { timeout: 15_000 });
+});

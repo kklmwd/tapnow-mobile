@@ -13,7 +13,8 @@ import type { Asset, Kind, NodeData, Settings } from './types';
 import { canConnect, resolveInputs, upstreamPending, wouldCycle, type FlowNode } from './graph';
 import { endpointFor, getModel, modelsFor, type Mode } from './models';
 import { runMock } from './providers/mock';
-import { errorMessage, runFal, uploadToFal } from './providers/fal';
+import { afterReload } from './reload';
+import { errorMessage, resumeFal, runFal, uploadToFal } from './providers/fal';
 
 export type Panel = null | 'gallery' | 'settings';
 
@@ -37,6 +38,8 @@ interface State {
   runNode: (id: string, withUpstream?: boolean) => Promise<void>;
   importProject: (json: string) => void;
   resetCanvas: (seed?: boolean) => void;
+  /** After a reload, pick up fal jobs that were still queued. */
+  resumePending: () => void;
 }
 
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
@@ -105,6 +108,35 @@ export const useStore = create<State>()(
       const patch = (id: string, p: Partial<NodeData>) =>
         set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...p } } : n)) }));
 
+      function finish(id: string, kind: 'image' | 'video', modelId: string, prompt: string, out: string[]) {
+        if (!out.length) throw new Error('The model returned no output.');
+        const assets: Asset[] = out.map((url) => ({ id: uid(), kind, url, prompt, modelId, createdAt: Date.now() }));
+        const cur = get().nodes.find((n) => n.id === id);
+        patch(id, {
+          results: [...assets, ...(cur?.data.results ?? [])].slice(0, 12),
+          picked: 0,
+          status: 'idle',
+          log: undefined,
+          pending: undefined,
+        });
+        set((st) => ({ gallery: [...assets, ...st.gallery].slice(0, 200) }));
+      }
+
+      /** Wait for a fal job that was queued before a reload. */
+      async function resumeOne(id: string) {
+        const node = get().nodes.find((n) => n.id === id);
+        const p = node?.data.pending;
+        if (!node || !p) return;
+        const model = getModel(node.data.modelId);
+        const log = (m: string) => patch(id, { log: m });
+        try {
+          const data = await resumeFal(p.endpoint, p.requestId, get().settings.falKey, log);
+          finish(id, model.kind, model.id, p.prompt, model.extract(data));
+        } catch (e) {
+          patch(id, { status: 'error', error: errorMessage(e), log: undefined, pending: undefined });
+        }
+      }
+
       async function generateOne(id: string) {
         const s = get();
         const node = s.nodes.find((n) => n.id === id);
@@ -117,7 +149,7 @@ export const useStore = create<State>()(
           patch(id, { status: 'error', error: 'Write a prompt or connect a Prompt node.' });
           return;
         }
-        patch(id, { status: 'running', error: undefined, log: 'Starting' });
+        patch(id, { status: 'running', error: undefined, log: 'Starting', pending: undefined });
         const log = (m: string) => patch(id, { log: m });
         try {
           const { settings } = get();
@@ -142,26 +174,14 @@ export const useStore = create<State>()(
           const out =
             settings.mode === 'mock'
               ? await runMock(model.kind, model.label, input, log)
-              : model.extract(await runFal(endpoint, input, settings.falKey, log));
-          if (!out.length) throw new Error('The model returned no output.');
-          const assets: Asset[] = out.map((url) => ({
-            id: uid(),
-            kind: model.kind,
-            url,
-            prompt,
-            modelId: model.id,
-            createdAt: Date.now(),
-          }));
-          const cur = get().nodes.find((n) => n.id === id);
-          patch(id, {
-            results: [...assets, ...(cur?.data.results ?? [])].slice(0, 12),
-            picked: 0,
-            status: 'idle',
-            log: undefined,
-          });
-          set((st) => ({ gallery: [...assets, ...st.gallery].slice(0, 200) }));
+              : model.extract(
+                  await runFal(endpoint, input, settings.falKey, log, (requestId) =>
+                    patch(id, { pending: { endpoint, requestId, prompt } }),
+                  ),
+                );
+          finish(id, model.kind, model.id, prompt, out);
         } catch (e) {
-          patch(id, { status: 'error', error: errorMessage(e), log: undefined });
+          patch(id, { status: 'error', error: errorMessage(e), log: undefined, pending: undefined });
         }
       }
 
@@ -228,6 +248,9 @@ export const useStore = create<State>()(
           if (!Array.isArray(d.nodes) || !Array.isArray(d.edges)) throw new Error('Not a TapCanvas project file.');
           set({ nodes: d.nodes, edges: d.edges, gallery: d.gallery ?? [], selectedId: null });
         },
+        resumePending: () => {
+          for (const n of get().nodes) if (n.data.status === 'running' && n.data.pending) void resumeOne(n.id);
+        },
         resetCanvas: (withSeed = true) =>
           set(withSeed ? { ...seed(), selectedId: null } : { nodes: [], edges: [], selectedId: null }),
       };
@@ -240,12 +263,16 @@ export const useStore = create<State>()(
         nodes: s.nodes.map((n) => ({
           ...n,
           selected: false,
-          data: { ...n.data, status: n.data.status === 'running' ? 'idle' : n.data.status, log: undefined },
+          data: afterReload(n.data),
         })),
         edges: s.edges,
         gallery: s.gallery,
         settings: s.settings,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Defer so the store has finished merging the stored state.
+        if (state) setTimeout(() => useStore.getState().resumePending(), 0);
+      },
     },
   ),
 );

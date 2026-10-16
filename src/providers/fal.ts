@@ -8,6 +8,7 @@ export async function runFal(
   input: Record<string, unknown>,
   key: string,
   onLog: (msg: string) => void,
+  onEnqueue?: (requestId: string) => void,
 ): Promise<unknown> {
   if (!key) throw new Error('Add your fal.ai key in Settings first.');
   fal.config({ credentials: key });
@@ -15,22 +16,52 @@ export async function runFal(
   const run = fal.subscribe(endpoint, {
     input,
     logs: true,
-    onEnqueue: () => onLog('Queued at fal'),
-    onQueueUpdate: (u) => {
-      if (u.status === 'IN_QUEUE') onLog(`Queued${u.queue_position != null ? ` (#${u.queue_position})` : ''}`);
-      else if (u.status === 'IN_PROGRESS') {
-        const last = u.logs?.at(-1)?.message;
-        onLog(last ? last.slice(0, 80) : 'Generating');
-      }
+    onEnqueue: (requestId) => {
+      onLog('Queued at fal');
+      onEnqueue?.(requestId);
     },
+    onQueueUpdate: queueLogger(onLog),
   });
+  return withTimeout(run.then((r) => r.data));
+}
+
+/**
+ * Pick up a job that was queued before the page reloaded (phones often discard
+ * background tabs) and wait for its result.
+ */
+export async function resumeFal(
+  endpoint: string,
+  requestId: string,
+  key: string,
+  onLog: (msg: string) => void,
+): Promise<unknown> {
+  if (!key) throw new Error('Add your fal.ai key in Settings first.');
+  fal.config({ credentials: key });
+  onLog('Resuming fal job');
+  const run = fal.queue
+    .subscribeToStatus(endpoint, { requestId, logs: true, onQueueUpdate: queueLogger(onLog) })
+    .then(() => fal.queue.result(endpoint, { requestId }))
+    .then((r) => r.data);
+  return withTimeout(run);
+}
+
+function queueLogger(onLog: (msg: string) => void) {
+  return (u: { status: string; queue_position?: number; logs?: { message: string }[] }) => {
+    if (u.status === 'IN_QUEUE') onLog(`Queued${u.queue_position != null ? ` (#${u.queue_position})` : ''}`);
+    else if (u.status === 'IN_PROGRESS') {
+      const last = u.logs?.at(-1)?.message;
+      onLog(last ? last.slice(0, 80) : 'Generating');
+    }
+  };
+}
+
+async function withTimeout<T>(run: Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error('Timed out after 10 minutes waiting for fal.')), TIMEOUT_MS);
   });
   try {
-    const res = await Promise.race([run, timeout]);
-    return res.data;
+    return await Promise.race([run, timeout]);
   } finally {
     clearTimeout(timer);
   }

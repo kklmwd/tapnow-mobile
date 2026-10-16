@@ -27,6 +27,8 @@ export type NodeData = {
   error?: string;
   log?: string;
   lastRequest?: { endpoint: string; input: unknown };
+  /** fal job queued but not finished yet. Kept across reloads so the job can be resumed. */
+  pending?: { endpoint: string; requestId: string; prompt: string };
 } & Record<string, unknown>;
 
 export interface Settings {
