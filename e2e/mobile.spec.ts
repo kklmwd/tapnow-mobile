@@ -226,3 +226,23 @@ test('a reload before fal queues the job shows Interrupted, not a blank node', a
   await page.reload();
   await expect(page.getByTestId('node-image')).toContainText('Interrupted', { timeout: 15_000 });
 });
+
+test('fal 401 tells the user to replace the key; a half key is flagged in Settings', async ({ page }) => {
+  await page.route(/fal\.(run|ai)/, (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ detail: 'Cannot access application "fal-ai/nano-banana-pro". Authentication is required to access this application.' }),
+    }),
+  );
+  await page.getByTestId('mode-chip').tap();
+  await page.getByRole('button', { name: 'fal.ai (real)' }).tap();
+  await page.getByTestId('fal-key').fill('onlyonepart');
+  await expect(page.getByTestId('key-problem')).toContainText('id:secret');
+  await page.getByTestId('fal-key').fill(' Key test-id:test-secret ');
+  await expect(page.getByTestId('key-problem')).toHaveCount(0);
+  await page.getByTestId('settings').getByRole('button', { name: 'Done' }).tap();
+  await page.getByTestId('node-image').tap();
+  await page.getByTestId('generate').tap();
+  await expect(page.getByRole('alert')).toContainText('fal.ai/dashboard/keys', { timeout: 15_000 });
+});

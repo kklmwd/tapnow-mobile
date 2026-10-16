@@ -67,6 +67,24 @@ async function withTimeout<T>(run: Promise<T>): Promise<T> {
   }
 }
 
+/** Clean a pasted key: drop spaces, quotes and a leading "Key " or "FAL_KEY=". */
+export function cleanKey(raw: string): string {
+  return raw
+    .replace(/\s+/g, '')
+    .replace(/^["']|["']$/g, '')
+    .replace(/^(FAL_KEY=|Key)/i, '')
+    .replace(/^["']|["']$/g, '');
+}
+
+/** A fal key is two parts joined by a colon: key id and secret. Returns a problem, or null. */
+export function keyProblem(key: string): string | null {
+  if (!key) return null;
+  const [id, secret, extra] = key.split(':');
+  if (secret === undefined) return 'This does not look like a full fal key. It should be two parts joined by a colon (id:secret). Copy the whole key when you create it.';
+  if (!id || !secret || extra !== undefined) return 'This key looks incomplete. It should be exactly id:secret.';
+  return null;
+}
+
 /** Upload a data/blob URL to fal storage and return a public URL. */
 export async function uploadToFal(url: string, key: string): Promise<string> {
   if (!key) throw new Error('Add your fal.ai key in Settings first.');
@@ -95,6 +113,9 @@ export function errorMessage(e: unknown): string {
   }
   if (typeof err.message === 'string' && err.message && !parts.some((p) => p.includes(err.message as string))) {
     parts.push(err.message);
+  }
+  if (err.status === 401) {
+    parts.push('fal did not accept the key in Settings. It may be deleted or incomplete. Create a new key at fal.ai/dashboard/keys and paste the whole id:secret.');
   }
   if (parts.length === 0) {
     const name = typeof err.name === 'string' && err.name ? err.name : 'Error';

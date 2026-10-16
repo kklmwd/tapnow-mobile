@@ -3,7 +3,7 @@ import type { Edge } from '@xyflow/react';
 import { canConnect, resolveInputs, upstreamPending, wouldCycle, type FlowNode } from './graph';
 import { endpointFor, getModel, MODELS } from './models';
 import type { NodeData } from './types';
-import { errorMessage } from './providers/fal';
+import { cleanKey, errorMessage, keyProblem } from './providers/fal';
 import { afterReload, INTERRUPTED } from './reload';
 
 const node = (id: string, kind: NodeData['kind'], extra: Partial<NodeData> = {}): FlowNode => ({
@@ -136,5 +136,22 @@ describe('afterReload', () => {
   });
   it('leaves finished nodes alone', () => {
     expect(afterReload(d({ status: 'error', error: 'x' }))).toMatchObject({ status: 'error', error: 'x' });
+  });
+});
+
+describe('fal key handling', () => {
+  it('cleans common paste noise', () => {
+    expect(cleanKey(' Key abc-123:def456\n')).toBe('abc-123:def456');
+    expect(cleanKey('FAL_KEY="abc:def"')).toBe('abc:def');
+  });
+  it('flags a key without the id:secret shape', () => {
+    expect(keyProblem('abc:def')).toBeNull();
+    expect(keyProblem('')).toBeNull();
+    expect(keyProblem('justsecret')).toMatch(/two parts/);
+    expect(keyProblem('abc:')).toMatch(/incomplete/);
+  });
+  it('explains a 401 in plain words', () => {
+    const e = Object.assign(new Error(''), { status: 401, body: { detail: 'Authentication is required to access this application.' } });
+    expect(errorMessage(e)).toMatch(/HTTP 401 - Authentication is required.*fal\.ai\/dashboard\/keys/);
   });
 });

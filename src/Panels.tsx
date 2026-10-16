@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MODELS } from './models';
+import { cleanKey, keyProblem } from './providers/fal';
 import { useStore } from './store';
 import type { Asset } from './types';
 
@@ -122,8 +123,13 @@ export function SettingsPanel() {
           value={settings.falKey}
           placeholder="paste key id:secret"
           data-testid="fal-key"
-          onChange={(e) => setSettings({ falKey: e.target.value.trim() })}
+          onChange={(e) => setSettings({ falKey: cleanKey(e.target.value) })}
         />
+        {keyProblem(settings.falKey) && (
+          <div className="err-line" data-testid="key-problem">
+            {keyProblem(settings.falKey)}
+          </div>
+        )}
         <small>
           Stored only in this browser. Every generation is billed to your fal account. Use a key with a spend limit.
         </small>
