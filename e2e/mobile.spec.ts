@@ -156,3 +156,21 @@ test('live mode sends the right request to fal (network stubbed)', async ({ page
   expect(body).toMatchObject({ aspect_ratio: '1:1', resolution: '1K', num_images: 1 });
   expect(body.prompt).toContain('ramen shop');
 });
+
+test('fal rejection shows a readable reason, not a blank error', async ({ page }) => {
+  await page.route(/fal\.(run|ai)/, (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: 'application/json',
+      body: JSON.stringify({ detail: 'User is locked. Reason: Exhausted balance.' }),
+    }),
+  );
+  await page.getByTestId('mode-chip').tap();
+  await page.getByRole('button', { name: 'fal.ai (real)' }).tap();
+  await page.getByTestId('fal-key').fill('test-id:test-secret');
+  await page.getByTestId('settings').getByRole('button', { name: 'Done' }).tap();
+  await page.getByTestId('node-image').tap();
+  await page.getByTestId('generate').tap();
+  await expect(page.getByRole('alert')).toContainText('Exhausted balance', { timeout: 15_000 });
+  await shot(page, '06-fal-403');
+});

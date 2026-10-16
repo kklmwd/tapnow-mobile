@@ -3,6 +3,7 @@ import type { Edge } from '@xyflow/react';
 import { canConnect, resolveInputs, upstreamPending, wouldCycle, type FlowNode } from './graph';
 import { endpointFor, getModel, MODELS } from './models';
 import type { NodeData } from './types';
+import { errorMessage } from './providers/fal';
 
 const node = (id: string, kind: NodeData['kind'], extra: Partial<NodeData> = {}): FlowNode => ({
   id,
@@ -59,6 +60,25 @@ describe('model payloads (shapes from fal docs)', () => {
 
   it('every default exists in its own options', () => {
     for (const m of MODELS) for (const p of m.params) expect(p.options).toContain(m.defaults[p.key]);
+  });
+});
+
+describe('errorMessage', () => {
+  it('reads fal status and body.detail even when message is empty', () => {
+    const e = Object.assign(new Error(''), { status: 403, body: { detail: 'Exhausted balance' } });
+    expect(errorMessage(e)).toBe('HTTP 403 - Exhausted balance');
+  });
+  it('handles validation detail arrays', () => {
+    const e = Object.assign(new Error('Unprocessable'), {
+      status: 422,
+      body: { detail: [{ msg: 'image_urls required' }] },
+    });
+    expect(errorMessage(e)).toBe('HTTP 422 - image_urls required - Unprocessable');
+  });
+  it('never returns an empty string', () => {
+    expect(errorMessage(new Error('')).length).toBeGreaterThan(10);
+    expect(errorMessage({}).length).toBeGreaterThan(10);
+    expect(errorMessage(undefined).length).toBeGreaterThan(10);
   });
 });
 
