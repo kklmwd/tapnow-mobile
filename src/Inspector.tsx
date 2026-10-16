@@ -219,8 +219,13 @@ export function Inspector({ node }: { node: FlowNode }) {
 
           {d.lastRequest && (
             <details>
-              <summary>Last request</summary>
-              <pre>{d.lastRequest.endpoint + '\n' + JSON.stringify(d.lastRequest.input, null, 2)}</pre>
+              <summary data-testid="last-request">Last request (tap to show)</summary>
+              <pre>
+                {d.lastRequest.endpoint +
+                  (d.lastRequest.requestId ? `\nfal request id: ${d.lastRequest.requestId}` : '') +
+                  '\n' +
+                  JSON.stringify(d.lastRequest.input, null, 2)}
+              </pre>
             </details>
           )}
         </>

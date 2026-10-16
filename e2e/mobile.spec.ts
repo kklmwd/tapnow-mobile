@@ -204,9 +204,8 @@ test('a fal job survives a page reload and its image still arrives', async ({ pa
   await page.getByTestId('node-image').tap();
   await page.getByTestId('generate').tap();
   await expect(page.getByTestId('generate')).toHaveText('Generating', { timeout: 15_000 });
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__store.getState().nodes.find((n: any) => n.id === 'seed-image').data.pending?.requestId))
-    .toBe('r9');
+  await page.getByTestId('last-request').tap();
+  await expect(page.getByTestId('inspector')).toContainText('fal request id: r9');
 
   // Phone discards the background tab, user comes back.
   await page.reload();

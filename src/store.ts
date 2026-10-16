@@ -176,7 +176,10 @@ export const useStore = create<State>()(
               ? await runMock(model.kind, model.label, input, log)
               : model.extract(
                   await runFal(endpoint, input, settings.falKey, log, (requestId) =>
-                    patch(id, { pending: { endpoint, requestId, prompt } }),
+                    patch(id, {
+                      pending: { endpoint, requestId, prompt },
+                      lastRequest: { endpoint, input: shorten(input), requestId },
+                    }),
                   ),
                 );
           finish(id, model.kind, model.id, prompt, out);
