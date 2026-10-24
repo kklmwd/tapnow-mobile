@@ -70,6 +70,11 @@
   ];
   const COMBO_WORDS = ['PERFECT!', 'DOUBLE!', 'TRIPLE!', 'ON FIRE!', 'BRAIN FREEZE!', 'SCOOPTACULAR!', 'UNSTOPPABLE!', 'LEGENDARY!'];
   const SMALL_WORDS = ['plop', 'yum', 'nice', 'boop', 'mmm', 'tasty', 'yes!'];
+  // Katakana sound-effect stickers.
+  const JP_CATCH = ['パクッ!', 'ポン!', 'ドン!', 'ヤッタ!', 'ウマイ!', 'ペロッ!'];
+  const JP_BIG = ['スゴイ!!', 'キター!!', 'サイコー!!', 'ヤバイ!!'];
+  const JP_MISS = ['ガーン!!', 'ギャー!!', 'アアッ!!'];
+  const JP_JUNK = ['ナニ?!', 'ドーン!!', 'エエッ?!'];
 
   let W = 0, H = 0, DPR = 1, R = 30, STEP = 38, BASE = 0;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -104,6 +109,7 @@
   let state = 'title';
   let stack, falling, bits, pops, rings, score, lives, combo, spawnT, cam, stateT;
   let shake = 0, flashA = 0, flashC = '#fff', freeze = 0, beat = 0, scorePulse = 0, time = 0;
+  let mood = 'idle', moodT = 0, moodLen = 0, kicks = 0, confettiAcc = 0;
 
   function reset() {
     stack = [];
@@ -118,6 +124,7 @@
     cam = 0;
     stateT = 0;
     shake = 0;
+    mood = 'idle';
     cone.lean = cone.leanV = 0;
   }
   reset();
@@ -221,6 +228,8 @@
     shing: () => { noise(0.35, 0.12, 'highpass', 3000, 9000); tone(2600, 0.4, 'sine', 0.04, 1.1); },
     gun: (t = now()) => { for (let k = 0; k < 3; k++) { noise(0.14, 0.3, 'lowpass', 4000, 150, t + k * 0.11); tone(140, 0.08, 'square', 0.06, 0.4, t + k * 0.11); } },
     zap: () => { tone(220, 0.25, 'sawtooth', 0.06, 6); noise(0.2, 0.06, 'bandpass', 2000, 6000); },
+    crowd: () => { for (let k = 0; k < 5; k++) tone(260 + k * 45, 0.6, 'sawtooth', 0.018, 1.5 + k * 0.05); noise(0.5, 0.05, 'bandpass', 900, 1800); },
+    gasp: () => { tone(700, 0.4, 'triangle', 0.05, 0.4); noise(0.3, 0.06, 'bandpass', 1200, 400); },
   };
   const sfx = (name, ...a) => { if (audio) SFX[name](...a); };
   const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
@@ -839,8 +848,16 @@
   }
   const ring = (x, y, c) => rings.push({ x, y, c, t: 0 });
   const SIZES = { s: [0.55, 0.75], m: [0.9, 0.95], l: [1.2, 1.1], xl: [1.65, 1.5] };
-  function pop(text, x, y, size, color = '#ff7a00') {
-    pops.push({ text, x, y, t: 0, size, color, rot: rand(-0.25, 0.25) });
+  function pop(text, x, y, size, color = '#ff7a00', fill = '#ffffff') {
+    pops.push({ text, x, y, t: 0, size, color, fill, burst: pick(['#ffd000', '#ffffff', '#00e5ff', '#ff2e93']), rot: rand(-0.25, 0.25) });
+  }
+  // A katakana sticker slapped somewhere near (x, y).
+  function jp(list, x, y) {
+    pop(pick(list), x + rand(-R * 2.2, R * 2.2), y - rand(R * 0.3, R * 2.2), 'm', pick(CONFETTI.slice(0, 6)), '#ffd000');
+    pops[pops.length - 1].rot = rand(-0.5, 0.5);
+  }
+  function cheer(len) { mood = 'cheer'; moodT = 0; moodLen = len; }
+  function panic(len) { mood = 'shock'; moodT = 0; moodLen = len;
   }
 
   // ---------- game ----------
@@ -885,8 +902,11 @@
     addShake(perfect ? 9 + lvl : 3 + lvl * 0.5);
     cone.leanV += dx * 6 + rand(-50, 50) * (1 + lvl * 0.25);
     sfx('plop', Math.pow(2, Math.min(combo, 12) / 12));
+    cheer(perfect || junk ? 0.8 : 0.45);
+    if (Math.random() < 0.6) jp(junk ? JP_JUNK : JP_CATCH, sx, sy);
     if (junk) {
       pop(f.j.label, sx, sy - R * 1.7, 'l', f.j.col);
+      sfx('crowd');
       sfx(f.j.sfx);
       flash('#ffffff', 0.4);
       confetti(sx, sy, 26);
@@ -896,6 +916,7 @@
       const word = COMBO_WORDS[Math.min(combo, COMBO_WORDS.length) - 1];
       pop(combo > COMBO_WORDS.length ? word + ' ×' + combo : word, sx, sy - R * 1.7, combo >= 3 ? 'xl' : 'l', combo >= 3 ? pick(CONFETTI.slice(0, 6)) : '#ff7a00');
       sfx('arp', Math.min(combo, 10));
+      if (combo >= 2) { jp(JP_BIG, W / 2, sy - R); sfx('crowd'); }
       flash('#ffffff', combo >= 3 ? 0.45 : 0.25);
       if (combo >= 2) confetti(sx, sy, 10 + combo * 6);
       freeze = 0.05;
@@ -906,6 +927,7 @@
     }
     if (lvl > tier(n - 1)) {
       pop('FASTER!', W / 2, H * 0.34, 'xl', '#ff4d6d');
+      pop('ハヤイ!!', W * rand(0.25, 0.75), H * 0.24, 'l', '#00a8f0', '#ffd000');
       sfx('riser');
       flash('#ffd166', 0.3);
       addShake(14);
@@ -929,6 +951,9 @@
     flash('#ff4d6d', 0.4);
     burst(f.x, H - 6, f.kind === 'junk' ? f.j.col : f.f.c, 36, 420);
     pop('SPLAT!', f.x, H - R * 2.4, 'xl', '#ff4d6d');
+    jp(JP_MISS, W / 2, H * 0.55);
+    panic(0.9);
+    sfx('gasp');
     sfx('splat');
     buzz([60, 40, 60]);
     if (lives <= 0) gameOver();
@@ -952,6 +977,7 @@
     addShake(24);
     flash('#ffffff', 0.6);
     sfx('sad');
+    panic(Infinity);
     buzz([80, 60, 160]);
   }
 
@@ -962,8 +988,21 @@
     flashA = Math.max(0, flashA - dt * 2.6);
     scorePulse = Math.max(0, scorePulse - dt * 4);
     beat = Math.max(0, beat - dt * 6);
-    while (kickQ.length && kickQ[0] <= now()) { kickQ.shift(); beat = 1; }
+    while (kickQ.length && kickQ[0] <= now()) { kickQ.shift(); beat = 1; kicks++; }
     music();
+    moodT += dt;
+    if (moodT > moodLen) {
+      if (state === 'title') { mood === 'cheer' ? (mood = 'idle') : cheer(0.9); moodT = 0; moodLen = 1.4; }
+      else mood = 'idle';
+    }
+    // Confetti never stops raining while playing, harder as it speeds up.
+    if (state === 'play' && bits.length < 600) {
+      confettiAcc += dt * (4 + tier(stack.length) * 1.5 + (combo >= 3 ? 10 : 0));
+      while (confettiAcc >= 1) {
+        confettiAcc--;
+        bits.push({ rect: true, x: rand(0, W), y: -10, vx: rand(-60, 60), vy: rand(40, 140), w: rand(5, 10), h: rand(3, 6), rot: rand(0, 6), vr: rand(-10, 10), c: pick(CONFETTI), life: 4 });
+      }
+    }
 
     // Cone follows the finger with a little smoothing.
     cone.px = cone.x;
@@ -1086,16 +1125,14 @@
     const a = SKIES[i], b = SKIES[(i + 1) % SKIES.length];
     const s = t * t * (3 - 2 * t);
     const g = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, Math.max(W, H) * 0.8);
-    g.addColorStop(0, mix(a[1], b[1], s));
-    g.addColorStop(1, mix(a[0], b[0], s));
+    const fever = combo >= 3 && state === 'play';
+    const fc = SKIES[kicks % SKIES.length];
+    g.addColorStop(0, fever ? fc[1] : mix(a[1], b[1], s));
+    g.addColorStop(1, fever ? fc[0] : mix(a[0], b[0], s));
     ctx.fillStyle = g;
     ctx.fillRect(-40, -40, W + 80, H + 80);
     rays(W / 2, H * 0.42, 18, 'rgba(255,255,255,0.14)', time * 0.12);
     if (halftone) ctx.drawImage(halftone, -40, -40, W + 80, H + 80);
-    if (combo >= 3 && state === 'play') {
-      ctx.fillStyle = `hsla(${(time * 140) % 360}, 100%, 60%, ${0.18 + beat * 0.08})`;
-      ctx.fillRect(-40, -40, W + 80, H + 80);
-    }
     if (beat && state === 'play') {
       ctx.fillStyle = `rgba(255,255,255,${beat * 0.1})`;
       ctx.fillRect(-40, -40, W + 80, H + 80);
@@ -1285,6 +1322,141 @@
     ctx.stroke();
   }
 
+  // ---------- the crowd: four original mascots reacting from the edges ----------
+  function face(s, lx, ly) {
+    ctx.strokeStyle = BLACK;
+    ctx.lineWidth = Math.max(2, R * 0.08);
+    ctx.lineCap = 'round';
+    const ex = s * 0.36, ey = -s * 0.12;
+    if (mood === 'cheer') {
+      ctx.beginPath();
+      for (const sx of [-1, 1]) { ctx.moveTo(sx * ex - s * 0.15, ey + s * 0.06); ctx.lineTo(sx * ex, ey - s * 0.1); ctx.lineTo(sx * ex + s * 0.15, ey + s * 0.06); }
+      ctx.stroke();
+      ctx.fillStyle = '#e0144c';
+      ctx.beginPath(); ctx.moveTo(-s * 0.4, s * 0.16); ctx.quadraticCurveTo(0, s * 0.9, s * 0.4, s * 0.16); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ff8fab';
+      ctx.beginPath(); ctx.ellipse(0, s * 0.45, s * 0.15, s * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+      return;
+    }
+    const shock = mood === 'shock';
+    for (const sx of [-1, 1]) {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(sx * ex, ey, s * (shock ? 0.25 : 0.18), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = BLACK;
+      ctx.beginPath(); ctx.arc(sx * ex + lx * s * 0.07, ey + ly * s * 0.07, s * (shock ? 0.06 : 0.09), 0, Math.PI * 2); ctx.fill();
+    }
+    if (shock) {
+      ctx.fillStyle = BLACK;
+      ctx.beginPath(); ctx.ellipse(0, s * 0.4, s * 0.13, s * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7ee8fa';
+      ctx.beginPath(); ctx.moveTo(s * 0.62, -s * 0.5); ctx.quadraticCurveTo(s * 0.78, -s * 0.2, s * 0.62, -s * 0.15); ctx.quadraticCurveTo(s * 0.46, -s * 0.2, s * 0.62, -s * 0.5); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(0, s * 0.14, s * 0.24, 0.25, Math.PI - 0.25); ctx.stroke();
+    }
+  }
+
+  const MASCOTS = {
+    sun(s) {
+      ctx.save();
+      ctx.rotate(time * (mood === 'cheer' ? 4 : 0.8));
+      ctx.fillStyle = '#ff7a00';
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a - 0.17) * s * 0.9, Math.sin(a - 0.17) * s * 0.9);
+        ctx.lineTo(Math.cos(a) * s * 1.45, Math.sin(a) * s * 1.45);
+        ctx.lineTo(Math.cos(a + 0.17) * s * 0.9, Math.sin(a + 0.17) * s * 0.9);
+        ctx.fill(); ctx.stroke();
+      }
+      ctx.restore();
+      ctx.fillStyle = '#ffd000';
+      ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    },
+    tanuki(s) {
+      for (const sx of [-1, 1]) {
+        ctx.fillStyle = '#8d5524';
+        ctx.beginPath(); ctx.arc(sx * s * 0.68, -s * 0.72, s * 0.34, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+      ctx.fillStyle = '#c97b47';
+      ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#5c3317';
+      for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sx * s * 0.29, -s * 0.08, s * 0.3, s * 0.22, sx * 0.3, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#f6e0c4';
+      ctx.beginPath(); ctx.ellipse(0, s * 0.35, s * 0.45, s * 0.32, 0, 0, Math.PI * 2); ctx.fill();
+    },
+    popsicle(s) {
+      ctx.fillStyle = '#e0b07a';
+      ctx.beginPath(); ctx.roundRect(-s * 0.15, s * 0.7, s * 0.3, s * 1.0, s * 0.1); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.roundRect(-s * 0.75, -s * 1.1, s * 1.5, s * 2.0, s * 0.7);
+      ctx.fillStyle = '#00d1ff';
+      ctx.fill();
+      ctx.save(); ctx.clip();
+      ctx.fillStyle = '#ff5ea8';
+      ctx.fillRect(-s, -s * 1.2, s * 2, s * 0.75);
+      ctx.restore();
+      ctx.stroke();
+    },
+    onigiri(s) {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(0, s * 0.8);
+      ctx.arcTo(s * 1.1, s * 0.8, 0, -s * 1.15, s * 0.35);
+      ctx.arcTo(0, -s * 1.15, -s * 1.1, s * 0.8, s * 0.35);
+      ctx.arcTo(-s * 1.1, s * 0.8, s * 1.1, s * 0.8, s * 0.35);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1b2b22';
+      ctx.beginPath(); ctx.rect(-s * 0.42, s * 0.42, s * 0.84, s * 0.38); ctx.fill(); ctx.stroke();
+    },
+  };
+
+  function drawCrowd() {
+    const s = R * 1.2;
+    const top = Math.max(18, H * 0.06);
+    const tx = state === 'play' ? landX() : W / 2, ty = state === 'play' ? landY() : H * 0.4;
+    const people = [
+      ['sun', R * 0.7, top + R * 3.8, 0.2, 0],
+      ['tanuki', R * 0.75, H - R * 1.0, 0.25, 1.3],
+      ['popsicle', W - R * 0.75, H - R * 1.2, -0.2, 2.1],
+      ['onigiri', W - R * 0.45, H * 0.52, -0.45, 3.4],
+    ];
+    ctx.lineJoin = 'round';
+    for (const [kind, x, y, rot, ph] of people) {
+      const bob = Math.sin(time * 6 + ph) * R * 0.08 - beat * R * 0.14;
+      const jump = mood === 'cheer' ? -Math.abs(Math.sin(moodT * 16 + ph)) * R * 0.5 : 0;
+      const jit = mood === 'shock' && !reduceMotion ? rand(-3, 3) : 0;
+      const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1;
+      ctx.save();
+      ctx.translate(x + jit, y + bob + jump);
+      ctx.rotate(rot + (mood === 'cheer' ? Math.sin(moodT * 14 + ph) * 0.18 : 0));
+      ctx.strokeStyle = BLACK;
+      ctx.lineWidth = Math.max(2.5, R * 0.1);
+      MASCOTS[kind](s);
+      face(s * 0.8, dx / d, dy / d);
+      ctx.restore();
+    }
+  }
+
+  // Jagged comic burst behind big callouts.
+  function balloon(w, h, color, a, t) {
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = BLACK;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'miter';
+    ctx.beginPath();
+    const n = 36;
+    for (let k = 0; k < n; k++) {
+      const ang = (k / n) * Math.PI * 2 + t * 0.6;
+      const rr = k % 2 ? 0.8 : 1 + (k % 5) * 0.06;
+      ctx.lineTo(Math.cos(ang) * w * 0.6 * rr, Math.sin(ang) * h * 1.2 * rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // Arcade lettering: each letter bounces and tilts, with a white face, a
   // black outline, a coloured outer rim and a hard shadow.
   function comic(str, x, y, size, fill = '#ffffff', outer = '#ff7a00', alpha = 1, wob = 0) {
@@ -1357,7 +1529,8 @@
     ctx.scale(back * fit, back * fit);
     if (p.size === 's') comic(p.text, 0, 0, size, '#ffd000', '#ffffff', a);
     else {
-      comic(p.text, 0, 0, size, '#ffffff', p.color, a, t * 10);
+      if (p.size === 'l' || p.size === 'xl') balloon(w, size, p.burst, a, t);
+      comic(p.text, 0, 0, size, p.fill, p.color, a, t * 10);
       ctx.globalAlpha = a;
       ctx.fillStyle = '#ffd000';
       ctx.strokeStyle = BLACK;
@@ -1399,6 +1572,14 @@
       ctx.translate(-W / 2, -H / 2);
     }
     sky();
+    if (state === 'play' && !reduceMotion) {
+      // Everything in front of the sky sways, harder as it speeds up and wildly in fever.
+      const tilt = Math.sin(time * 1.1) * Math.min(0.035, 0.012 + tier(stack.length) * 0.002) + (combo >= 3 ? Math.sin(time * 7) * 0.012 : 0);
+      ctx.translate(W / 2, H / 2);
+      ctx.rotate(tilt);
+      ctx.translate(-W / 2, -H / 2);
+    }
+    drawCrowd();
     if (combo >= 3 && state === 'play') rays(landX(), landY(), 14, `rgba(255,240,0,${0.3 + beat * 0.15})`, time * 0.9);
 
     const rimY = toScreenY(0);
@@ -1565,7 +1746,7 @@
   }
   requestAnimationFrame(frame);
   if (document.fonts && document.fonts.load) {
-    document.fonts.load(`40px ${POP}`).catch(() => {});
+    document.fonts.load(`40px ${POP}`, 'SCOOPS ' + [...JP_CATCH, ...JP_BIG, ...JP_MISS, ...JP_JUNK, 'ハヤイ!!'].join('')).catch(() => {});
     document.fonts.load(`800 20px ${BODY}`).catch(() => {});
   }
 })();
