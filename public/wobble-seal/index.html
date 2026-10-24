@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#ff2e93" />
+<meta name="theme-color" content="#141220" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <!--page-->
@@ -13,9 +13,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Nunito:wght@600;800&display=swap" />
 <style>
-  /* One full-screen canvas; the whole UI is drawn in it. A single loud arcade look, no theme switch. */
+  /* One canvas column, at most 460px wide and centred; the whole UI is drawn in it. A single dark arcade look, no theme switch. */
   :root {
-    --sky: #ff2e93;
+    --sky: #141220;
     --ink: #111111;
     --display: 'Dela Gothic One', 'Arial Black', system-ui, sans-serif;
     --body: 'Nunito', 'Avenir Next', system-ui, sans-serif;
@@ -32,7 +32,7 @@
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
   }
-  canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  canvas { display: block; width: min(100%, 460px); height: 100%; margin: 0 auto; touch-action: none; cursor: grab; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(0, 0, 0, 0.6); }
   canvas:active { cursor: grabbing; }
 </style>
 </head>
@@ -59,14 +59,21 @@
   ];
   const SPRINKLES = ['#ff6f91', '#ffd166', '#5ec2f2', '#7bd389', '#ffffff'];
   const CONFETTI = ['#ffd000', '#00b7ff', '#ff2e93', '#14cc6a', '#8f2bff', '#ff7a00', '#ffffff'];
-  // The sky drifts through these as the tower climbs, then loops.
+  // A dark, low-saturation backdrop that drifts through these as the tower
+  // climbs, so speed lines, confetti and callouts carry the colour.
   const SKIES = [
-    ['#ff2e93', '#ff7cc2'],
-    ['#ff7a00', '#ffb64d'],
-    ['#00a8f0', '#66d9ff'],
-    ['#8f2bff', '#c38bff'],
-    ['#ffc400', '#ffe766'],
-    ['#10c463', '#6cf0a6'],
+    ['#2e2a4d', '#1d1b33'],
+    ['#2a4155', '#1b2a38'],
+    ['#45304f', '#2b1d33'],
+    ['#284546', '#182b2c'],
+    ['#433a30', '#2a2420'],
+  ];
+  // Fever hard-cuts through brighter ones on every beat.
+  const FEVER_SKIES = [
+    ['#7a1f5f', '#2a0f26'],
+    ['#175a84', '#0c2233'],
+    ['#55248a', '#1d0d33'],
+    ['#84500f', '#2d1a08'],
   ];
   const COMBO_WORDS = ['ピタッ!', 'ダブル!', 'トリプル!', 'アツイ!!', 'スゴイ!!', 'サイコー!!', 'ムテキ!!', 'デンセツ!!'];
   // Katakana sound-effect stickers.
@@ -80,10 +87,15 @@
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = (a) => a[(Math.random() * a.length) | 0];
 
+  // The play area is always GAME_W units wide and scaled to the canvas, so
+  // every screen plays the same; wide screens get a centred column.
+  const GAME_W = 400;
+  let SCALE = 1;
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 3);
-    W = cvs.clientWidth;
-    H = cvs.clientHeight;
+    SCALE = cvs.clientWidth / GAME_W;
+    DPR = Math.min(window.devicePixelRatio || 1, 3) * SCALE;
+    W = GAME_W;
+    H = cvs.clientHeight / SCALE;
     cvs.width = Math.round(W * DPR);
     cvs.height = Math.round(H * DPR);
     R = clamp(Math.min(W, H * 0.62) * 0.085, 22, 42);
@@ -327,7 +339,7 @@
     if (audio && audio.state === 'suspended') audio.resume();
     const rect = cvs.getBoundingClientRect();
     const mb = muteBtn();
-    if (Math.hypot(e.clientX - rect.left - mb.x, e.clientY - rect.top - mb.y) < 26) {
+    if (Math.hypot((e.clientX - rect.left) / SCALE - mb.x, (e.clientY - rect.top) / SCALE - mb.y) < 26) {
       muted = !muted;
       store('wobble-seal-muted', muted ? '1' : '0');
       if (master) master.gain.value = muted ? 0 : 0.7;
@@ -349,7 +361,7 @@
     if (!holding) return;
     // Relative drag, so the finger never has to cover the tower.
     const c = topCx();
-    const want = holdCone + (e.clientX - holdX) * 1.38;
+    const want = holdCone + ((e.clientX - holdX) * 1.38) / SCALE;
     cone.tx = clamp(want, R - c, W - R - c);
     // Re-anchor at the edges so reversing responds at once, with no dead zone.
     if (cone.tx !== want) { holdX = e.clientX; holdCone = cone.tx; }
@@ -1160,7 +1172,7 @@
     c.height = Math.ceil((H + 80) * DPR);
     const g = c.getContext('2d');
     g.scale(DPR, DPR);
-    g.fillStyle = 'rgba(0,0,0,0.13)';
+    g.fillStyle = 'rgba(255,255,255,0.045)';
     g.beginPath();
     for (let y = 0; y < H + 80; y += 7) {
       for (let x = (y / 7) % 2 ? 7 : 0; x < W + 80; x += 14) {
@@ -1198,15 +1210,14 @@
     const s = t * t * (3 - 2 * t);
     const g = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, Math.max(W, H) * 0.8);
     const fever = combo >= 3 && state === 'play';
-    const fc = SKIES[kicks % SKIES.length];
-    g.addColorStop(0, fever ? fc[1] : mix(a[1], b[1], s));
-    g.addColorStop(1, fever ? fc[0] : mix(a[0], b[0], s));
+    const fc = FEVER_SKIES[kicks % FEVER_SKIES.length];
+    g.addColorStop(0, fever ? fc[0] : mix(a[0], b[0], s));
+    g.addColorStop(1, fever ? fc[1] : mix(a[1], b[1], s));
     ctx.fillStyle = g;
     ctx.fillRect(-40, -40, W + 80, H + 80);
-    rays(W / 2, H * 0.42, 18, 'rgba(255,255,255,0.14)', time * 0.12);
     if (halftone) ctx.drawImage(halftone, -40, -40, W + 80, H + 80);
     if (beat && state === 'play') {
-      ctx.fillStyle = `rgba(255,255,255,${beat * 0.1})`;
+      ctx.fillStyle = `rgba(255,255,255,${beat * 0.06})`;
       ctx.fillRect(-40, -40, W + 80, H + 80);
     }
     speedLines();
@@ -1237,7 +1248,8 @@
       const len = H * (0.12 + fl * 0.3) * grow;
       const span = H + len;
       const y = ((fl * span + time * v * (0.7 + fx * 0.6)) % span) - len;
-      ctx.strokeStyle = k % 3 ? `rgba(255,255,255,${Math.min(0.85, 0.3 + n * 0.012)})` : `rgba(0,0,0,${Math.min(0.5, 0.15 + n * 0.008)})`;
+      const la = Math.min(0.85, 0.3 + n * 0.012);
+      ctx.strokeStyle = k % 3 ? `rgba(255,255,255,${la})` : k % 2 ? `rgba(255,208,0,${la})` : `rgba(0,229,255,${la})`;
       ctx.lineWidth = 1.5 + (k % 4) + Math.min(n, 60) * 0.035;
       ctx.beginPath();
       ctx.moveTo(fx * W, y);
@@ -1673,6 +1685,9 @@
     ctx.beginPath();
     ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
     ctx.fillStyle = fg;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1789,7 +1804,7 @@
       const x = f.x + Math.sin(f.wob) * 1.5;
       // Manga speed lines once things get quick.
       if (f.vy > H * 0.33) {
-        ctx.strokeStyle = BLACK;
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
         ctx.lineCap = 'round';
         for (let k = -2; k <= 2; k++) {
           ctx.lineWidth = k % 2 ? 2 : 3.5;
@@ -1855,10 +1870,10 @@
         ctx.globalAlpha = k < lives ? 1 : 0.3;
         ctx.save();
         ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2);
-        ctx.fillStyle = k < lives ? '#ff3b3b' : BLACK;
+        ctx.fillStyle = k < lives ? '#ff3b3b' : '#ffffff';
         ctx.fill();
         ctx.clip();
-        ctx.fillStyle = k < lives ? '#ffffff' : BLACK;
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(x - R * 0.3, y - R * 0.07, R * 0.6, R * 0.14);
         ctx.restore();
         ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2); ctx.stroke();
