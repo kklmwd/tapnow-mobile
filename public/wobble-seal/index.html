@@ -920,12 +920,19 @@
   }
   const ring = (x, y, c) => rings.push({ x, y, c, t: 0 });
   const SIZES = { s: [0.55, 0.75], m: [0.9, 0.95], l: [1.2, 1.1], xl: [1.65, 1.5] };
+  // All callouts live in a band along the bottom of the screen: big ones
+  // centred and stacked upward when several fire at once, stickers scattered.
+  // The x and y callers pass are only a hint for which side to lean to.
   function pop(text, x, y, size, color = '#ff7a00', fill = '#ffffff') {
-    pops.push({ text, x, y, t: 0, size, color, fill, rot: rand(-0.25, 0.25) });
+    const big = size === 'l' || size === 'xl';
+    const lane = pops.filter((p) => p.t < 0.7 && (p.size === 'l' || p.size === 'xl')).length;
+    const px = big ? W / 2 + clamp(x - W / 2, -W * 0.12, W * 0.12) : rand(W * 0.15, W * 0.85);
+    const py = big ? H - R * (2.4 + (lane % 3) * 1.6) : H - R * rand(1.3, 4.6);
+    pops.push({ text, x: px, y: py, t: 0, size, color, fill, rot: rand(-0.25, 0.25) });
   }
-  // A katakana sticker slapped somewhere near (x, y).
+  // A katakana sticker slapped somewhere along the bottom.
   function jp(list, x, y) {
-    pop(pick(list), x + rand(-R * 2.2, R * 2.2), y - rand(R * 0.3, R * 2.2), 'm', pick(CONFETTI.slice(0, 6)), '#ffd000');
+    pop(pick(list), x, y, 'm', pick(CONFETTI.slice(0, 6)), '#ffd000');
     pops[pops.length - 1].rot = rand(-0.5, 0.5);
   }
   function cheer(len) { mood = 'cheer'; moodT = 0; moodLen = len; }
