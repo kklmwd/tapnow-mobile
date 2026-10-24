@@ -21,6 +21,12 @@ Static web app (installable PWA). No backend: your fal.ai key stays in your brow
 
 Model endpoints can be changed in Settings > Model endpoints if fal renames one.
 
+## Scoops (mini game)
+
+`public/scoops/index.html` is a standalone, endless ice cream stacking game, served at `./scoops/` on the deployed site.
+Hold one finger anywhere and slide to move the cone; catch falling scoops to build the tower, and land them dead centre for a "perfect" combo.
+Three misses melt the tower; tap to go again. Cherries give back a cone. No build step or dependencies.
+
 ## Develop
 
 ```
