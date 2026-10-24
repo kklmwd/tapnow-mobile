@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#141220" />
+<meta name="theme-color" content="#ff2e93" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <!--page-->
@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Nunito:wght@600;800&display=swap" />
 <style>
-  /* One canvas column, at most 460px wide and centred; the whole UI is drawn in it. A single dark arcade look, no theme switch. */
+  /* One canvas column, at most 460px wide and centred; the whole UI is drawn in it. A single loud arcade look, no theme switch. */
   :root {
     --sky: #141220;
     --ink: #111111;
@@ -59,21 +59,14 @@
   ];
   const SPRINKLES = ['#ff6f91', '#ffd166', '#5ec2f2', '#7bd389', '#ffffff'];
   const CONFETTI = ['#ffd000', '#00b7ff', '#ff2e93', '#14cc6a', '#8f2bff', '#ff7a00', '#ffffff'];
-  // A dark, low-saturation backdrop that drifts through these as the tower
-  // climbs, so speed lines, confetti and callouts carry the colour.
+  // The sky drifts through these as the tower climbs, then loops.
   const SKIES = [
-    ['#2e2a4d', '#1d1b33'],
-    ['#2a4155', '#1b2a38'],
-    ['#45304f', '#2b1d33'],
-    ['#284546', '#182b2c'],
-    ['#433a30', '#2a2420'],
-  ];
-  // Fever hard-cuts through brighter ones on every beat.
-  const FEVER_SKIES = [
-    ['#7a1f5f', '#2a0f26'],
-    ['#175a84', '#0c2233'],
-    ['#55248a', '#1d0d33'],
-    ['#84500f', '#2d1a08'],
+    ['#ff2e93', '#ff7cc2'],
+    ['#ff7a00', '#ffb64d'],
+    ['#00a8f0', '#66d9ff'],
+    ['#8f2bff', '#c38bff'],
+    ['#ffc400', '#ffe766'],
+    ['#10c463', '#6cf0a6'],
   ];
   const COMBO_WORDS = ['ピタッ!', 'ダブル!', 'トリプル!', 'アツイ!!', 'スゴイ!!', 'サイコー!!', 'ムテキ!!', 'デンセツ!!'];
   // Katakana sound-effect stickers.
@@ -1172,7 +1165,7 @@
     c.height = Math.ceil((H + 80) * DPR);
     const g = c.getContext('2d');
     g.scale(DPR, DPR);
-    g.fillStyle = 'rgba(255,255,255,0.045)';
+    g.fillStyle = 'rgba(0,0,0,0.13)';
     g.beginPath();
     for (let y = 0; y < H + 80; y += 7) {
       for (let x = (y / 7) % 2 ? 7 : 0; x < W + 80; x += 14) {
@@ -1210,14 +1203,15 @@
     const s = t * t * (3 - 2 * t);
     const g = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, Math.max(W, H) * 0.8);
     const fever = combo >= 3 && state === 'play';
-    const fc = FEVER_SKIES[kicks % FEVER_SKIES.length];
-    g.addColorStop(0, fever ? fc[0] : mix(a[0], b[0], s));
-    g.addColorStop(1, fever ? fc[1] : mix(a[1], b[1], s));
+    const fc = SKIES[kicks % SKIES.length];
+    g.addColorStop(0, fever ? fc[1] : mix(a[1], b[1], s));
+    g.addColorStop(1, fever ? fc[0] : mix(a[0], b[0], s));
     ctx.fillStyle = g;
     ctx.fillRect(-40, -40, W + 80, H + 80);
+    rays(W / 2, H * 0.42, 18, 'rgba(255,255,255,0.14)', time * 0.12);
     if (halftone) ctx.drawImage(halftone, -40, -40, W + 80, H + 80);
     if (beat && state === 'play') {
-      ctx.fillStyle = `rgba(255,255,255,${beat * 0.06})`;
+      ctx.fillStyle = `rgba(255,255,255,${beat * 0.1})`;
       ctx.fillRect(-40, -40, W + 80, H + 80);
     }
     speedLines();
@@ -1248,8 +1242,7 @@
       const len = H * (0.12 + fl * 0.3) * grow;
       const span = H + len;
       const y = ((fl * span + time * v * (0.7 + fx * 0.6)) % span) - len;
-      const la = Math.min(0.85, 0.3 + n * 0.012);
-      ctx.strokeStyle = k % 3 ? `rgba(255,255,255,${la})` : k % 2 ? `rgba(255,208,0,${la})` : `rgba(0,229,255,${la})`;
+      ctx.strokeStyle = k % 3 ? `rgba(255,255,255,${Math.min(0.85, 0.3 + n * 0.012)})` : `rgba(0,0,0,${Math.min(0.5, 0.15 + n * 0.008)})`;
       ctx.lineWidth = 1.5 + (k % 4) + Math.min(n, 60) * 0.035;
       ctx.beginPath();
       ctx.moveTo(fx * W, y);
@@ -1804,7 +1797,7 @@
       const x = f.x + Math.sin(f.wob) * 1.5;
       // Manga speed lines once things get quick.
       if (f.vy > H * 0.33) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.strokeStyle = BLACK;
         ctx.lineCap = 'round';
         for (let k = -2; k <= 2; k++) {
           ctx.lineWidth = k % 2 ? 2 : 3.5;
@@ -1870,10 +1863,10 @@
         ctx.globalAlpha = k < lives ? 1 : 0.3;
         ctx.save();
         ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2);
-        ctx.fillStyle = k < lives ? '#ff3b3b' : '#ffffff';
+        ctx.fillStyle = k < lives ? '#ff3b3b' : BLACK;
         ctx.fill();
         ctx.clip();
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = k < lives ? '#ffffff' : BLACK;
         ctx.fillRect(x - R * 0.3, y - R * 0.07, R * 0.6, R * 0.14);
         ctx.restore();
         ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2); ctx.stroke();
