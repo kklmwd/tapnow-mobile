@@ -21,13 +21,13 @@ Static web app (installable PWA). No backend: your fal.ai key stays in your brow
 
 Model endpoints can be changed in Settings > Model endpoints if fal renames one.
 
-## Scoops (mini game)
+## Wobble Seal (mini game)
 
-`public/scoops/index.html` is a standalone, endless ice cream stacking game, served at `./scoops/` on the deployed site.
-It has a loud Japanese-arcade look: saturated sunburst backgrounds with halftone dots, thick black outlines, bouncy outlined lettering, katakana sound-effect stickers and a crowd of mascots that cheer catches and panic at misses.
-Hold one finger anywhere and slide to move the cone; catch falling scoops to build the tower, and land them dead centre for a "perfect" combo.
-Three misses melt the tower; tap to go again. Cherries give back a cone. From 30 scoops, junk falls too (29 kinds: pets, poop, sushi, a Poké Ball, game swords and guns, pizza...): 40% of drops at 30 scoops, 80% at 45, all of them from 60. Junk is worth 3 and missing it costs a life like a scoop.
-There is a beat whose tempo follows the speed, plus shake, flashes, hit-stop and callouts on every catch; the speaker button mutes. No build step or dependencies.
+`public/wobble-seal/index.html` is a standalone, endless stacking game, served at `./wobble-seal/` on the deployed site.
+A circus seal balances a tower of balls on its nose. Hold one finger anywhere and slide to move it; catch falling balls to build the tower, and land them dead centre for a "perfect" combo.
+It starts fast, stays flat for the first 10 balls, then speeds up every 2 balls. The taller the tower, the heavier it drags and the more it bends and wobbles.
+From 30 balls, junk falls too (29 kinds: pets, poop, sushi, a Poké Ball, game swords and guns, pizza...): 40% of drops at 30 balls, 80% at 45, all of them from 60. Junk is worth 3, and any miss costs one of three lives; golden fish give one back.
+It has a loud Japanese-arcade look: saturated sunburst backgrounds with halftone dots, thick black outlines, bouncy outlined lettering, katakana sound-effect stickers and a crowd of mascots that cheer catches and panic at misses. The speaker button mutes. No build step or dependencies.
 
 ## Develop
 

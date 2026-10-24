@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <!--page-->
-<title>Scoops</title>
+<title>Wobble Seal</title>
 <meta name="claude:viewport-fit-sides" content="cover" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -37,7 +37,7 @@
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Scoops: hold and slide to move the cone and catch falling ice cream scoops"></canvas>
+<canvas id="game" aria-label="Wobble Seal: hold and slide to move the seal and catch falling balls on its tower"></canvas>
 <script>
 (() => {
   const cvs = document.getElementById('game');
@@ -49,13 +49,13 @@
   const BLACK = '#111111';
   const INK = '#3b2a4a';
 
-  const FLAVORS = [
-    { name: 'strawberry', c: '#f7a8b8', d: '#e48aa0' },
-    { name: 'mint', c: '#a6e3c8', d: '#7fcaa8' },
-    { name: 'vanilla', c: '#fff4dc', d: '#ecd7ad' },
-    { name: 'chocolate', c: '#8a5a44', d: '#6c4332' },
-    { name: 'blueberry', c: '#b9a8f0', d: '#9784dc' },
-    { name: 'mango', c: '#ffcf7a', d: '#f0b155' },
+  const BALLS = [
+    { name: 'beach', c: '#ff3b3b' },
+    { name: 'circus', c: '#00a8f0' },
+    { name: 'dots', c: '#ff2e93' },
+    { name: 'basket', c: '#ff8c1a' },
+    { name: 'soccer', c: '#ffffff' },
+    { name: 'star', c: '#8f2bff' },
   ];
   const SPRINKLES = ['#ff6f91', '#ffd166', '#5ec2f2', '#7bd389', '#ffffff'];
   const CONFETTI = ['#ffd000', '#00b7ff', '#ff2e93', '#14cc6a', '#8f2bff', '#ff7a00', '#ffffff'];
@@ -68,10 +68,10 @@
     ['#ffc400', '#ffe766'],
     ['#10c463', '#6cf0a6'],
   ];
-  const COMBO_WORDS = ['PERFECT!', 'DOUBLE!', 'TRIPLE!', 'ON FIRE!', 'BRAIN FREEZE!', 'SCOOPTACULAR!', 'UNSTOPPABLE!', 'LEGENDARY!'];
-  const SMALL_WORDS = ['plop', 'yum', 'nice', 'boop', 'mmm', 'tasty', 'yes!'];
+  const COMBO_WORDS = ['PERFECT!', 'DOUBLE!', 'TRIPLE!', 'ON FIRE!', 'BALL-ANCED!', 'SEALTASTIC!', 'UNSTOPPABLE!', 'LEGENDARY!'];
+  const SMALL_WORDS = ['boop', 'bonk', 'arf!', 'nice', 'oop!', 'yes!', 'boing'];
   // Katakana sound-effect stickers.
-  const JP_CATCH = ['パクッ!', 'ポン!', 'ドン!', 'ヤッタ!', 'ウマイ!', 'ペロッ!'];
+  const JP_CATCH = ['ポン!', 'ドン!', 'ヤッタ!', 'ボヨン!', 'ピタッ!', 'オウ!'];
   const JP_BIG = ['スゴイ!!', 'キター!!', 'サイコー!!', 'ヤバイ!!'];
   const JP_MISS = ['ガーン!!', 'ギャー!!', 'アアッ!!'];
   const JP_JUNK = ['ナニ?!', 'ドーン!!', 'エエッ?!'];
@@ -88,8 +88,8 @@
     cvs.width = Math.round(W * DPR);
     cvs.height = Math.round(H * DPR);
     R = clamp(Math.min(W, H * 0.62) * 0.085, 22, 42);
-    STEP = R * 1.22;
-    BASE = H - Math.max(R * 3.4, H * 0.2);
+    STEP = R * 1.86;
+    BASE = H - Math.max(R * 4.3, H * 0.22);
     cone.x = clamp(cone.x || W / 2, R, W - R);
     cone.tx = cone.x;
     sprites.clear();
@@ -100,8 +100,8 @@
 
   let best = 0, muted = false;
   try {
-    best = +localStorage.getItem('scoops-best') || 0;
-    muted = localStorage.getItem('scoops-muted') === '1';
+    best = +localStorage.getItem('wobble-seal-best') || 0;
+    muted = localStorage.getItem('wobble-seal-muted') === '1';
   } catch (e) {}
   const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
@@ -131,27 +131,25 @@
   resize();
   window.addEventListener('resize', resize);
 
-  // Speed tier from the tower height: flat for the first 10 scoops, then one
-  // step every 5 scoops, and from 20 scoops one step every 3.
+  // Speed tier from the tower height: flat for the first 10 balls, then one
+  // step every 2 balls.
   function tier(n) {
-    if (n < 10) return 0;
-    if (n < 20) return 1 + Math.floor((n - 10) / 5);
-    return 3 + Math.floor((n - 20) / 3);
+    return n < 10 ? 0 : 1 + Math.floor((n - 10) / 2);
   }
 
   // ---------- geometry ----------
-  const scoopWorldY = (i) => i * STEP + R * 0.55;
+  // World height of ball i's centre; 0 is the tip of the seal's nose.
+  const ballWorldY = (i) => i * STEP + R * 0.92;
   const toScreenY = (wy) => BASE - wy + cam;
   const topCx = () => (stack.length ? stack[stack.length - 1].cx : 0);
-  // Upper scoops sway more than lower ones; the cone itself stays rigid.
+  // The whole tower bends: the higher a ball sits, the further it swings.
   const sway = (i) => {
-    const d = stack.length - 1 - i;
-    const f = Math.max(0, 1 - d / 9);
-    return cone.lean * f * f * Math.min(1, stack.length / 8);
+    const n = stack.length;
+    return cone.lean * Math.pow((i + 1) / n, 1.5) * Math.min(1, n / 6);
   };
-  const scoopX = (i) => cone.x + stack[i].cx + sway(i);
-  const landX = () => (stack.length ? scoopX(stack.length - 1) : cone.x);
-  const landY = () => toScreenY(scoopWorldY(stack.length));
+  const ballX = (i) => cone.x + stack[i].cx + sway(i);
+  const landX = () => (stack.length ? ballX(stack.length - 1) : cone.x);
+  const landY = () => toScreenY(ballWorldY(stack.length));
 
   // ---------- sound ----------
   let audio = null, master = null, noiseBuf = null;
@@ -203,7 +201,8 @@
   const PENTA = [0, 2, 4, 7, 9];
   const note = (n) => 392 * Math.pow(2, (PENTA[n % 5] + 12 * Math.floor(n / 5)) / 12);
   const SFX = {
-    plop: (p) => { tone(260 * p, 0.09, 'sine', 0.12, 2.4); noise(0.07, 0.06, 'lowpass', 1400); },
+    plop: (p) => { tone(240 * p, 0.12, 'sine', 0.13, 2.8); noise(0.06, 0.07, 'lowpass', 1400); },
+    arf: (t = now()) => { tone(520, 0.09, 'square', 0.05, 0.7, t); tone(470, 0.11, 'square', 0.05, 0.65, t + 0.12); },
     quack: (t = now()) => { tone(640, 0.12, 'square', 0.05, 0.55, t); tone(580, 0.15, 'square', 0.05, 0.5, t + 0.15); },
     honk: () => { tone(250, 0.32, 'sawtooth', 0.07, 0.85); tone(256, 0.32, 'sawtooth', 0.05, 0.85); },
     boing: () => tone(150, 0.4, 'sine', 0.14, 5),
@@ -265,7 +264,7 @@
     const mb = muteBtn();
     if (Math.hypot(e.clientX - rect.left - mb.x, e.clientY - rect.top - mb.y) < 26) {
       muted = !muted;
-      store('scoops-muted', muted ? '1' : '0');
+      store('wobble-seal-muted', muted ? '1' : '0');
       if (master) master.gain.value = muted ? 0 : 0.9;
       return;
     }
@@ -292,7 +291,7 @@
   cvs.addEventListener('pointercancel', release);
   cvs.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  // ---------- junk that starts falling at 30 scoops ----------
+  // ---------- junk that starts falling at 30 balls ----------
   function heart(x, y, s) {
     ctx.beginPath();
     ctx.moveTo(x, y + s * 0.35);
@@ -821,7 +820,7 @@
     } },
   ];
 
-  // Share of drops that are junk: 40% at 30 scoops, 80% at 45, 100% from 60.
+  // Share of drops that are junk: 40% at 30 balls, 80% at 45, 100% from 60.
   function junkRate(n) {
     if (n < 30) return 0;
     if (n < 45) return 0.4 + 0.4 * (n - 30) / 15;
@@ -863,24 +862,25 @@
   // ---------- game ----------
   function spawn() {
     const n = stack.length;
-    const speedK = Math.min(0.27 * (1 + tier(n) * 0.12), 1.1);
+    const speedK = Math.min(0.4 * (1 + tier(n) * 0.07), 1.1);
     const base = { x: rand(R * 1.2, W - R * 1.2), y: -R * 1.5, vy: H * speedK * rand(0.9, 1.1), wob: rand(0, 6), rot: 0, spin: 0, passed: false };
     if (lives < 3 && n > 4 && Math.random() < 0.09) {
-      falling.push({ ...base, kind: 'cherry' });
+      falling.push({ ...base, kind: 'fish' });
     } else if (Math.random() < junkRate(n)) {
       falling.push({ ...base, kind: 'junk', j: pick(JUNK), spin: rand(-4, 4) });
     } else {
-      falling.push({ ...base, kind: 'scoop', f: pick(FLAVORS), spr: Math.random() < 0.3, seed: pick([7, 131, 529]) });
+      falling.push({ ...base, kind: 'ball', f: pick(BALLS) });
     }
   }
 
   function catchIt(f, dx) {
-    if (f.kind === 'cherry') {
+    if (f.kind === 'fish') {
       lives = Math.min(3, lives + 1);
       const y = landY();
-      burst(f.x, y, '#e5383b', 24, 300);
+      burst(f.x, y, '#ffd000', 24, 300);
       confetti(f.x, y, 20);
-      pop('+1 LIFE', f.x, y - R * 1.2, 'l', '#e5383b');
+      pop('+1 LIFE', f.x, y - R * 1.2, 'l', '#ff7a00');
+      sfx('arf');
       flash('#ffb3c1', 0.35);
       sfx('chime');
       buzz(30);
@@ -890,17 +890,17 @@
     const perfect = Math.abs(dx) < R * 0.2;
     combo = perfect ? combo + 1 : 0;
     const prev = topCx();
-    stack.push({ cx: prev + (perfect ? 0 : dx * 0.85), kind: f.kind, f: f.f, j: f.j, spr: f.spr, seed: f.seed, tilt: junk ? rand(-0.3, 0.3) : 0, sq: junk ? 0.45 : 0.5 });
+    stack.push({ cx: prev + (perfect ? 0 : dx * 0.85), kind: f.kind, f: f.f, j: f.j, tilt: junk ? rand(-0.3, 0.3) : rand(0, 6), sq: junk ? 0.45 : 0.55 });
     const n = stack.length;
     score += (junk ? 3 : 1) + (perfect ? Math.min(combo - 1, 4) : 0);
     scorePulse = 1;
     const lvl = tier(n);
-    const sx = scoopX(n - 1), sy = toScreenY(scoopWorldY(n - 1));
+    const sx = ballX(n - 1), sy = toScreenY(ballWorldY(n - 1));
     const col = junk ? f.j.col : f.f.c;
     burst(sx, sy + R * 0.4, col, perfect ? 26 : 12, perfect ? 360 : 200);
     ring(sx, sy + R * 0.3, perfect ? '#ffffff' : col);
-    addShake(perfect ? 9 + lvl : 3 + lvl * 0.5);
-    cone.leanV += dx * 6 + rand(-50, 50) * (1 + lvl * 0.25);
+    addShake(perfect ? 9 + Math.min(lvl, 10) : 3 + Math.min(lvl, 10) * 0.5);
+    cone.leanV += dx * 6 + rand(-50, 50) * (1 + Math.min(lvl, 10) * 0.25 + n * 0.03);
     sfx('plop', Math.pow(2, Math.min(combo, 12) / 12));
     cheer(perfect || junk ? 0.8 : 0.45);
     if (Math.random() < 0.6) jp(junk ? JP_JUNK : JP_CATCH, sx, sy);
@@ -916,6 +916,7 @@
       const word = COMBO_WORDS[Math.min(combo, COMBO_WORDS.length) - 1];
       pop(combo > COMBO_WORDS.length ? word + ' ×' + combo : word, sx, sy - R * 1.7, combo >= 3 ? 'xl' : 'l', combo >= 3 ? pick(CONFETTI.slice(0, 6)) : '#ff7a00');
       sfx('arp', Math.min(combo, 10));
+      sfx('arf');
       if (combo >= 2) { jp(JP_BIG, W / 2, sy - R); sfx('crowd'); }
       flash('#ffffff', combo >= 3 ? 0.45 : 0.25);
       if (combo >= 2) confetti(sx, sy, 10 + combo * 6);
@@ -932,7 +933,7 @@
       flash('#ffd166', 0.3);
       addShake(14);
     }
-    const banner = { 30: 'JUNK INCOMING', 45: 'MORE JUNK!!', 60: 'ALL JUNK. NO SCOOPS.' }[n];
+    const banner = { 30: 'JUNK INCOMING', 45: 'MORE JUNK!!', 60: 'ALL JUNK, ALL THE TIME' }[n];
     if (banner) {
       pop(banner, W / 2, H * 0.42, 'xl', '#9b5de5');
       sfx('siren');
@@ -943,8 +944,8 @@
   }
 
   function miss(f) {
-    if (f.kind === 'cherry') return;
-    // Junk counts like a scoop: from 60 scoops it is all that falls.
+    if (f.kind === 'fish') return;
+    // Junk counts like a ball: from 60 balls it is all that falls.
     lives--;
     combo = 0;
     addShake(18);
@@ -963,14 +964,14 @@
     state = 'over';
     stateT = 0;
     holding = false;
-    if (score > best) { best = score; store('scoops-best', String(best)); }
+    if (score > best) { best = score; store('wobble-seal-best', String(best)); }
     // The visible part of the tower topples.
     const dir = cone.lean >= 0 ? 1 : -1;
     for (let i = Math.max(0, stack.length - 16); i < stack.length; i++) {
-      const y = toScreenY(scoopWorldY(i));
+      const y = toScreenY(ballWorldY(i));
       if (y < -R * 2 || y > H + R * 2) continue;
       const h = (i - (stack.length - 16)) / 16;
-      bits.push({ obj: stack[i], x: scoopX(i), y, vx: dir * rand(60, 200) * (0.5 + h) + rand(-90, 90), vy: rand(-380, -80), rot: 0, vr: rand(-7, 7), life: 3 });
+      bits.push({ obj: stack[i], x: ballX(i), y, vx: dir * rand(60, 200) * (0.5 + h) + rand(-90, 90), vy: rand(-380, -80), rot: 0, vr: rand(-7, 7), life: 3 });
     }
     stack = [];
     falling = [];
@@ -997,37 +998,42 @@
     }
     // Confetti never stops raining while playing, harder as it speeds up.
     if (state === 'play' && bits.length < 600) {
-      confettiAcc += dt * (4 + tier(stack.length) * 1.5 + (combo >= 3 ? 10 : 0));
+      confettiAcc += dt * (4 + Math.min(tier(stack.length), 10) * 1.5 + (combo >= 3 ? 10 : 0));
       while (confettiAcc >= 1) {
         confettiAcc--;
         bits.push({ rect: true, x: rand(0, W), y: -10, vx: rand(-60, 60), vy: rand(40, 140), w: rand(5, 10), h: rand(3, 6), rot: rand(0, 6), vr: rand(-10, 10), c: pick(CONFETTI), life: 4 });
       }
     }
 
-    // Cone follows the finger with a little smoothing.
+    // The seal follows the finger; the taller the tower, the heavier it drags,
+    // the further it bends and the longer it keeps wobbling.
     cone.px = cone.x;
     if (state === 'title') cone.tx = W / 2 + Math.sin(stateT * 1.6) * W * 0.18;
     const c = topCx();
+    const n = stack.length;
     cone.tx = clamp(cone.tx, R - c, W - R - c);
-    cone.x += (cone.tx - cone.x) * (1 - Math.exp(-dt * 26));
+    cone.x += (cone.tx - cone.x) * (1 - Math.exp((-dt * 26) / (1 + n * 0.05)));
     const vel = (cone.x - cone.px) / Math.max(dt, 1e-3);
-    const target = clamp(-vel * 0.05, -R * 1.3, R * 1.3);
-    cone.leanV += ((target - cone.lean) * 110 - cone.leanV * 9) * dt;
+    const reach = Math.min(R * 4, R * (1.3 + n * 0.06));
+    const idle = Math.sin(time * 1.7) * Math.min(R * 1.5, n * R * 0.035);
+    const target = clamp(-vel * 0.05 * (1 + n * 0.03) + idle, -reach, reach);
+    cone.leanV += ((target - cone.lean) * (110 / (1 + n * 0.04)) - cone.leanV * (9 / (1 + n * 0.015))) * dt;
+    cone.leanV += rand(-1, 1) * Math.min(n, 60) * 3 * dt;
     cone.lean += cone.leanV * dt;
 
     for (const s of stack) if (s.sq < 1) s.sq = Math.min(1, s.sq + (1 - s.sq) * dt * 12 + dt * 0.4);
 
     // Camera keeps the landing spot around the middle of the screen.
-    const want = Math.max(0, scoopWorldY(stack.length) - (BASE - H * 0.52));
+    const want = Math.max(0, ballWorldY(stack.length) - (BASE - H * 0.52));
     cam += (want - cam) * (1 - Math.exp(-dt * 5));
 
     if (state === 'play') {
       spawnT -= dt;
       const lvl = tier(stack.length);
-      const maxAir = 1 + Math.min(2, Math.floor(lvl / 3));
+      const maxAir = 1 + Math.min(2, Math.floor(lvl / 6));
       if (spawnT <= 0 && falling.length < maxAir) {
         spawn();
-        spawnT = Math.max(0.42, 1.45 - lvl * 0.09) * rand(0.85, 1.2);
+        spawnT = Math.max(0.38, 1.0 - lvl * 0.03) * rand(0.85, 1.2);
       }
       for (let k = falling.length - 1; k >= 0; k--) {
         const f = falling[k];
@@ -1038,7 +1044,7 @@
         f.rot += f.spin * dt;
         if (!f.passed && before < ly && f.y >= ly) {
           const dx = f.x - landX();
-          if (Math.abs(dx) < (f.kind === 'scoop' ? R * 1.05 : R * 1.2)) {
+          if (Math.abs(dx) < (f.kind === 'ball' ? R * 1.05 : R * 1.2)) {
             catchIt(f, dx);
             falling.splice(k, 1);
             continue;
@@ -1213,113 +1219,210 @@
     ctx.restore();
   }
 
-  function scoopShape(r, s) {
-    const f = s.f;
-    // Drippy skirt.
-    ctx.fillStyle = f.d;
+  function ballShape(r, s) {
+    const rr = r * 0.95;
+    ctx.save();
     ctx.beginPath();
-    ctx.ellipse(0, r * 0.38, r * 1.0, r * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-    for (let k = -2; k <= 2; k++) {
-      ctx.beginPath();
-      ctx.arc(k * r * 0.4, r * 0.62 + (k % 2 ? r * 0.06 : 0), r * 0.24, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Body.
-    ctx.fillStyle = f.c;
-    ctx.beginPath();
-    ctx.arc(0, -r * 0.05, r * 0.92, 0, Math.PI * 2);
-    ctx.fill();
-    for (let k = -2; k <= 2; k++) {
-      ctx.beginPath();
-      ctx.arc(k * r * 0.4, r * 0.48 + (k % 2 ? 0 : r * 0.04), r * 0.27, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Sprinkles.
-    if (s.spr) {
-      for (let k = 0; k < 6; k++) {
-        const a = s.seed + k * 2.4;
-        const px = Math.cos(a) * r * 0.55, py = Math.sin(a * 1.3) * r * 0.45 - r * 0.15;
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(a * 3);
-        ctx.fillStyle = SPRINKLES[k % SPRINKLES.length];
-        ctx.fillRect(-r * 0.11, -r * 0.035, r * 0.22, r * 0.07);
-        ctx.restore();
+    ctx.arc(0, 0, rr, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = s.f.c;
+    ctx.fillRect(-rr, -rr, rr * 2, rr * 2);
+    switch (s.f.name) {
+      case 'beach': {
+        const cols = ['#ff3b3b', '#ffffff', '#ffd000', '#ffffff', '#00a8f0', '#ffffff'];
+        cols.forEach((c, k) => {
+          ctx.fillStyle = c;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, rr, (k * Math.PI) / 3 - 0.3, ((k + 1) * Math.PI) / 3 - 0.3);
+          ctx.fill();
+        });
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, 0, rr * 0.18, 0, Math.PI * 2); ctx.fill();
+        break;
       }
+      case 'circus':
+        ctx.fillStyle = '#ffd000';
+        ctx.fillRect(-rr, -rr * 0.24, rr * 2, rr * 0.48);
+        ctx.fillStyle = '#ff3b3b';
+        star5(0, 0, rr * 0.36);
+        ctx.fill();
+        break;
+      case 'dots':
+        ctx.fillStyle = '#ffffff';
+        for (const [x, y] of [[-0.4, -0.35], [0.35, -0.3], [0, 0.15], [-0.5, 0.45], [0.45, 0.45], [0, -0.75], [-0.85, 0], [0.85, 0], [0, 0.8]]) {
+          ctx.beginPath(); ctx.arc(x * rr, y * rr, rr * 0.16, 0, Math.PI * 2); ctx.fill();
+        }
+        break;
+      case 'basket':
+        ctx.strokeStyle = BLACK;
+        ctx.lineWidth = rr * 0.07;
+        ctx.beginPath();
+        ctx.moveTo(0, -rr); ctx.lineTo(0, rr);
+        ctx.moveTo(-rr, 0); ctx.lineTo(rr, 0);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(-rr * 1.3, 0, rr * 0.9, -0.95, 0.95); ctx.stroke();
+        ctx.beginPath(); ctx.arc(rr * 1.3, 0, rr * 0.9, Math.PI - 0.95, Math.PI + 0.95); ctx.stroke();
+        break;
+      case 'soccer': {
+        ctx.fillStyle = BLACK;
+        const pent = (cx, cy, pr, rot) => {
+          ctx.beginPath();
+          for (let k = 0; k < 5; k++) { const a = rot + (k * Math.PI * 2) / 5; ctx.lineTo(cx + Math.cos(a) * pr, cy + Math.sin(a) * pr); }
+          ctx.fill();
+        };
+        pent(0, 0, rr * 0.3, -Math.PI / 2);
+        for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k * Math.PI * 2) / 5 + Math.PI / 5; pent(Math.cos(a) * rr * 0.95, Math.sin(a) * rr * 0.95, rr * 0.3, a); }
+        ctx.strokeStyle = BLACK;
+        ctx.lineWidth = rr * 0.05;
+        ctx.beginPath();
+        for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k * Math.PI * 2) / 5; ctx.moveTo(Math.cos(a) * rr * 0.3, Math.sin(a) * rr * 0.3); ctx.lineTo(Math.cos(a) * rr * 0.75, Math.sin(a) * rr * 0.75); }
+        ctx.stroke();
+        break;
+      }
+      case 'star':
+        ctx.fillStyle = '#ffd000';
+        star5(0, rr * 0.05, rr * 0.62);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        for (const [x, y] of [[-0.6, -0.55], [0.62, -0.4], [0.55, 0.6]]) { star5(x * rr, y * rr, rr * 0.13); ctx.fill(); }
+        break;
     }
-    // Shine.
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.beginPath();
-    ctx.ellipse(-r * 0.36, -r * 0.42, r * 0.22, r * 0.13, -0.6, 0, Math.PI * 2);
+    ctx.ellipse(-rr * 0.4, -rr * 0.45, rr * 0.24, rr * 0.13, -0.6, 0, Math.PI * 2);
     ctx.fill();
   }
 
   function drawItem(x, y, r, o, sq = 1, rot = 0) {
-    const key = o.kind === 'junk' ? 'j' + JUNK.indexOf(o.j) : 's' + FLAVORS.indexOf(o.f) + (o.spr ? '-' + o.seed : '');
-    const sp = sprite(key, () => (o.kind === 'junk' ? o.j.draw(R) : scoopShape(R, o)));
+    const key = o.kind === 'junk' ? 'j' + JUNK.indexOf(o.j) : 'b' + BALLS.indexOf(o.f);
+    const sp = sprite(key, () => (o.kind === 'junk' ? o.j.draw(R) : ballShape(R, o)));
     blit(sp, x, y, rot + (o.tilt || 0), 2 - sq, sq);
   }
 
-  function cherryShape(r) {
-    ctx.strokeStyle = '#3f8f29';
-    ctx.lineWidth = Math.max(2, r * 0.1);
-    ctx.lineCap = 'round';
+  // The extra-life pickup: a golden fish, the seal's favourite.
+  function goldFishShape(r) {
+    ctx.fillStyle = '#ff9f1c';
     ctx.beginPath();
-    ctx.moveTo(0, -r * 0.35);
-    ctx.quadraticCurveTo(r * 0.1, -r * 0.9, r * 0.45, -r * 1.05);
-    ctx.stroke();
-    ctx.fillStyle = '#ff1f3d';
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
+    ctx.moveTo(-r * 0.35, 0);
+    ctx.lineTo(-r * 0.8, -r * 0.35);
+    ctx.lineTo(-r * 0.8, r * 0.35);
     ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.beginPath();
-    ctx.arc(-r * 0.16, -r * 0.14, r * 0.1, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = '#ffd000';
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 0.55, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(r * 0.28, -r * 0.08, r * 0.11, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = BLACK;
+    ctx.beginPath(); ctx.arc(r * 0.31, -r * 0.08, r * 0.05, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    sparkle(-r * 0.05, -r * 0.12, r * 0.14);
   }
-  const drawCherry = (x, y) => blit(sprite('cherry', () => cherryShape(R)), x, y);
+  const drawGoldFish = (x, y) => blit(sprite('fish', () => goldFishShape(R)), x, y, Math.sin(time * 8) * 0.25);
 
-  function drawCone(x, rimY) {
-    const w = R * 1.0, h = R * 2.7;
+  // The circus seal balancing the tower on its nose; the nose tip is at (x, noseY).
+  function drawSeal(x, noseY) {
+    const s = R, n = stack.length;
+    const strain = Math.min(1, n / 40);
+    const lw = Math.max(2.5, R * 0.1);
+    // Striped circus drum the seal sits on.
+    const drumTop = noseY + s * 3.55, dw = s * 1.55;
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(x - w, rimY);
-    ctx.lineTo(x + w, rimY);
-    ctx.lineTo(x + R * 0.08, rimY + h);
-    ctx.quadraticCurveTo(x, rimY + h + R * 0.08, x - R * 0.08, rimY + h);
-    ctx.closePath();
-    ctx.fillStyle = '#eab676';
-    ctx.fill();
+    ctx.rect(x - dw, drumTop, dw * 2, H + R * 6 - drumTop);
     ctx.clip();
-    ctx.strokeStyle = '#cf9450';
-    ctx.lineWidth = Math.max(1.5, R * 0.06);
-    for (let k = -6; k <= 6; k++) {
-      const o = k * R * 0.42;
-      ctx.beginPath();
-      ctx.moveTo(x + o - h, rimY - 2);
-      ctx.lineTo(x + o + h, rimY + h * 2);
-      ctx.moveTo(x + o + h, rimY - 2);
-      ctx.lineTo(x + o - h, rimY + h * 2);
-      ctx.stroke();
+    for (let k = -4; k < 4; k++) {
+      ctx.fillStyle = k % 2 ? '#ff3b3b' : '#ffffff';
+      ctx.fillRect(x + k * dw * 0.25, drumTop, dw * 0.25, H);
     }
     ctx.restore();
     ctx.strokeStyle = BLACK;
-    ctx.lineWidth = Math.max(2.5, R * 0.1);
+    ctx.lineWidth = lw;
     ctx.lineJoin = 'round';
+    ctx.strokeRect(x - dw, drumTop, dw * 2, H);
+    ctx.fillStyle = '#ffd000';
     ctx.beginPath();
-    ctx.moveTo(x - w, rimY);
-    ctx.lineTo(x + w, rimY);
-    ctx.lineTo(x + R * 0.08, rimY + h);
-    ctx.quadraticCurveTo(x, rimY + h + R * 0.08, x - R * 0.08, rimY + h);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fillStyle = '#d99a52';
-    const rh = R * 0.34;
-    ctx.beginPath();
-    ctx.roundRect(x - w * 1.08, rimY - rh * 0.6, w * 2.16, rh, rh / 2);
+    ctx.ellipse(x, drumTop, dw, s * 0.3, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+
+    // The body swings under the nose as it fights to keep the tower up.
+    const swing = clamp(-cone.lean / (R * 3), -0.45, 0.45) + Math.sin(time * (3 + strain * 7)) * 0.04 * strain;
+    const flap = mood === 'cheer' ? Math.sin(time * 30) * 0.6 : Math.sin(time * (4 + strain * 8)) * (0.15 + strain * 0.25);
+    const GREY = '#7d93b2', DARK = '#5d7290', BELLY = '#c9d8ec';
+    ctx.save();
+    ctx.translate(x, noseY);
+    ctx.rotate(swing);
+    ctx.strokeStyle = BLACK;
+    ctx.lineWidth = lw;
+    for (const sx of [-1, 1]) {
+      ctx.save();
+      ctx.translate(sx * s * 0.6, s * 3.4);
+      ctx.rotate(sx * 0.5);
+      ctx.fillStyle = DARK;
+      ctx.beginPath(); ctx.ellipse(0, 0, s * 0.55, s * 0.22, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.fillStyle = GREY;
+    ctx.beginPath(); ctx.ellipse(0, s * 2.35, s * 1.1, s * 1.25, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = BELLY;
+    ctx.beginPath(); ctx.ellipse(0, s * 2.6, s * 0.68, s * 0.92, 0, 0, Math.PI * 2); ctx.fill();
+    for (const sx of [-1, 1]) {
+      ctx.save();
+      ctx.translate(sx * s * 0.95, s * 1.9);
+      ctx.rotate(sx * (0.9 + flap));
+      ctx.fillStyle = DARK;
+      ctx.beginPath(); ctx.ellipse(0, s * 0.35, s * 0.22, s * 0.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.fillStyle = GREY;
+    ctx.beginPath(); ctx.ellipse(0, s * 0.85, s * 0.72, s * 0.68, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = BELLY;
+    ctx.beginPath(); ctx.ellipse(0, s * 0.34, s * 0.4, s * 0.3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = BLACK;
+    ctx.beginPath(); ctx.ellipse(0, s * 0.12, s * 0.17, s * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = Math.max(1.2, R * 0.04);
+    ctx.beginPath();
+    for (const sx of [-1, 1]) for (const dy of [-0.08, 0.08]) { ctx.moveTo(sx * s * 0.28, s * 0.4); ctx.lineTo(sx * s * 0.78, s * (0.38 + dy * 2)); }
+    ctx.stroke();
+    // Eyes and brows.
+    ctx.lineWidth = Math.max(2, R * 0.08);
+    ctx.lineCap = 'round';
+    const ey = s * 0.82, ex = s * 0.32;
+    for (const sx of [-1, 1]) {
+      if (mood === 'cheer') {
+        ctx.beginPath(); ctx.arc(sx * ex, ey + s * 0.05, s * 0.12, Math.PI + 0.3, -0.3); ctx.stroke();
+      } else if (mood === 'shock') {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(sx * ex, ey, s * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = BLACK;
+        ctx.beginPath(); ctx.arc(sx * ex, ey, s * 0.05, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.fillStyle = BLACK;
+        ctx.beginPath(); ctx.ellipse(sx * ex, ey, s * 0.11, s * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(sx * ex - s * 0.03, ey - s * 0.05, s * 0.04, 0, Math.PI * 2); ctx.fill();
+        if (strain > 0.3) {
+          // Worried brows once the tower gets heavy.
+          ctx.beginPath(); ctx.moveTo(sx * ex - sx * s * 0.15, ey - s * 0.22); ctx.lineTo(sx * ex + sx * s * 0.12, ey - s * 0.3); ctx.stroke();
+        }
+      }
+    }
+    if (strain > 0.25 && mood !== 'cheer') {
+      ctx.fillStyle = '#7ee8fa';
+      ctx.lineWidth = Math.max(1.5, R * 0.05);
+      for (const sx of [-1, 1]) {
+        const dy = ((time * 1.5 + (sx > 0 ? 0.5 : 0)) % 1) * s * 0.5;
+        const dx = sx * s * 0.8;
+        ctx.beginPath();
+        ctx.moveTo(dx, s * 0.45 + dy);
+        ctx.quadraticCurveTo(dx + s * 0.13, s * 0.7 + dy, dx, s * 0.75 + dy);
+        ctx.quadraticCurveTo(dx - s * 0.13, s * 0.7 + dy, dx, s * 0.45 + dy);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   // ---------- the crowd: four original mascots reacting from the edges ----------
@@ -1384,17 +1487,13 @@
       ctx.fillStyle = '#f6e0c4';
       ctx.beginPath(); ctx.ellipse(0, s * 0.35, s * 0.45, s * 0.32, 0, 0, Math.PI * 2); ctx.fill();
     },
-    popsicle(s) {
-      ctx.fillStyle = '#e0b07a';
-      ctx.beginPath(); ctx.roundRect(-s * 0.15, s * 0.7, s * 0.3, s * 1.0, s * 0.1); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.roundRect(-s * 0.75, -s * 1.1, s * 1.5, s * 2.0, s * 0.7);
-      ctx.fillStyle = '#00d1ff';
-      ctx.fill();
-      ctx.save(); ctx.clip();
-      ctx.fillStyle = '#ff5ea8';
-      ctx.fillRect(-s, -s * 1.2, s * 2, s * 0.75);
-      ctx.restore();
-      ctx.stroke();
+    penguin(s) {
+      ctx.fillStyle = '#ff9f1c';
+      for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sx * s * 0.4, s * 1.1, s * 0.3, s * 0.14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+      ctx.fillStyle = '#1f2433';
+      ctx.beginPath(); ctx.ellipse(0, s * 0.1, s * 0.95, s * 1.1, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(0, s * 0.2, s * 0.7, s * 0.85, 0, 0, Math.PI * 2); ctx.fill();
     },
     onigiri(s) {
       ctx.fillStyle = '#ffffff';
@@ -1416,7 +1515,7 @@
     const people = [
       ['sun', R * 0.7, top + R * 3.8, 0.2, 0],
       ['tanuki', R * 0.75, H - R * 1.0, 0.25, 1.3],
-      ['popsicle', W - R * 0.75, H - R * 1.2, -0.2, 2.1],
+      ['penguin', W - R * 0.75, H - R * 1.2, -0.2, 2.1],
       ['onigiri', W - R * 0.45, H * 0.52, -0.45, 3.4],
     ];
     ctx.lineJoin = 'round';
@@ -1583,17 +1682,17 @@
     if (combo >= 3 && state === 'play') rays(landX(), landY(), 14, `rgba(255,240,0,${0.3 + beat * 0.15})`, time * 0.9);
 
     const rimY = toScreenY(0);
-    if (rimY < H + R * 3) drawCone(cone.x, rimY);
+    if (rimY < H + R * 4) drawSeal(cone.x, rimY);
 
     // Only the visible slice of an endless tower is drawn.
     const i0 = Math.max(0, Math.floor((BASE + cam - H - R * 3) / STEP));
     for (let i = i0; i < stack.length; i++) {
-      const y = toScreenY(scoopWorldY(i));
+      const y = toScreenY(ballWorldY(i));
       if (y < -R * 2) break;
-      drawItem(scoopX(i), y, R, stack[i], stack[i].sq);
+      drawItem(ballX(i), y, R, stack[i], stack[i].sq);
     }
 
-    // Guide where the next scoop lands.
+    // Guide where the next ball lands.
     if (state === 'play') {
       ctx.strokeStyle = 'rgba(255,255,255,0.8)';
       ctx.lineWidth = 2.5;
@@ -1631,7 +1730,7 @@
           ctx.stroke();
         }
       }
-      if (f.kind === 'cherry') drawCherry(x, f.y);
+      if (f.kind === 'fish') drawGoldFish(x, f.y);
       else drawItem(x, f.y, R, f, 1, f.kind === 'junk' ? f.rot : Math.sin(f.wob) * 0.05);
     }
 
@@ -1679,26 +1778,21 @@
       ctx.scale(s, s);
       comic(String(score), 0, 0, R * 1.6, '#ffffff', '#ff7a00', 1, time * 2);
       ctx.restore();
-      // Lives: three little cones.
+      // Lives: three little balls.
       ctx.strokeStyle = BLACK;
       ctx.lineWidth = 2.5;
-      ctx.lineJoin = 'round';
       for (let k = 0; k < 3; k++) {
-        const x = W / 2 + (k - 1) * R * 0.75, y = top + R * 2.25;
+        const x = W / 2 + (k - 1) * R * 0.75, y = top + R * 2.2;
         ctx.globalAlpha = k < lives ? 1 : 0.3;
-        ctx.fillStyle = k < lives ? '#eab676' : BLACK;
-        ctx.beginPath();
-        ctx.moveTo(x - R * 0.22, y - R * 0.12);
-        ctx.lineTo(x + R * 0.22, y - R * 0.12);
-        ctx.lineTo(x, y + R * 0.36);
-        ctx.closePath();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2);
+        ctx.fillStyle = k < lives ? '#ff3b3b' : BLACK;
         ctx.fill();
-        ctx.stroke();
+        ctx.clip();
         ctx.fillStyle = k < lives ? '#ffffff' : BLACK;
-        ctx.beginPath();
-        ctx.arc(x, y - R * 0.2, R * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.fillRect(x - R * 0.3, y - R * 0.07, R * 0.6, R * 0.14);
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(x, y, R * 0.24, 0, Math.PI * 2); ctx.stroke();
         ctx.globalAlpha = 1;
       }
     } else if (state === 'title') {
@@ -1708,7 +1802,7 @@
       ctx.save();
       ctx.translate(W / 2, ty);
       ctx.rotate(-0.06);
-      const w = comic('SCOOPS', 0, 0, size, '#ffffff', '#ff7a00', 1, time * 3);
+      const w = comic('WOBBLE', 0, 0, size, '#ffffff', '#ff7a00', 1, time * 3);
       ctx.fillStyle = '#ffd000';
       ctx.strokeStyle = BLACK;
       ctx.lineWidth = 3;
@@ -1717,10 +1811,10 @@
         ctx.fill();
         ctx.stroke();
       }
-      comic('SPECIAL!!', 0, size * 0.95, size * 0.45, '#ffd000', '#00a8f0', 1, time * 3 + 2);
+      comic('SEAL!!', 0, size * 1.05, size * 0.75, '#ffd000', '#00a8f0', 1, time * 3 + 2);
       ctx.restore();
-      pill('HOLD & SLIDE TO CATCH', W / 2, ty + size * 2.0, R * 0.42);
-      if (best) pill('BEST ' + best, W / 2, ty + size * 2.0 + R * 1.1, R * 0.36, 1, '#ffffff', BLACK);
+      pill('HOLD & SLIDE TO CATCH', W / 2, ty + size * 2.2, R * 0.42);
+      if (best) pill('BEST ' + best, W / 2, ty + size * 2.2 + R * 1.1, R * 0.36, 1, '#ffffff', BLACK);
     } else if (state === 'over') {
       const a = clamp(stateT * 2.5, 0, 1);
       comic('GAME OVER!!', W / 2, H * 0.22, R * 0.95, '#ffffff', '#00a8f0', a, time * 3);
@@ -1728,7 +1822,7 @@
       pill(score >= best && score > 0 ? 'NEW BEST!' : 'BEST ' + best, W / 2, H * 0.22 + R * 4.4, R * 0.42, a, '#ffffff', BLACK);
       if (stateT > 0.7) {
         const pulse = reduceMotion ? 1 : 0.75 + Math.sin(stateT * 5) * 0.25;
-        pill('TAP TO SCOOP AGAIN', W / 2, H * 0.22 + R * 5.6, R * 0.45, pulse);
+        pill('TAP TO PLAY AGAIN', W / 2, H * 0.22 + R * 5.6, R * 0.45, pulse);
       }
     }
     drawMute();
@@ -1746,7 +1840,7 @@
   }
   requestAnimationFrame(frame);
   if (document.fonts && document.fonts.load) {
-    document.fonts.load(`40px ${POP}`, 'SCOOPS ' + [...JP_CATCH, ...JP_BIG, ...JP_MISS, ...JP_JUNK, 'ハヤイ!!'].join('')).catch(() => {});
+    document.fonts.load(`40px ${POP}`, 'WOBBLE SEAL ' + [...JP_CATCH, ...JP_BIG, ...JP_MISS, ...JP_JUNK, 'ハヤイ!!'].join('')).catch(() => {});
     document.fonts.load(`800 20px ${BODY}`).catch(() => {});
   }
 })();
