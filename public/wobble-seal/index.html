@@ -861,7 +861,7 @@
   // ---------- game ----------
   function spawn() {
     const n = stack.length;
-    const speedK = Math.min(0.4 * (1 + tier(n) * 0.07), 1.1);
+    const speedK = Math.min(0.5 * (1 + tier(n) * 0.07), 1.375);
     const base = { x: rand(R * 1.2, W - R * 1.2), y: -R * 1.5, vy: H * speedK * rand(0.9, 1.1), wob: rand(0, 6), rot: 0, spin: 0, passed: false };
     if (lives < 3 && n > 4 && Math.random() < 0.09) {
       falling.push({ ...base, kind: 'fish' });
@@ -1030,7 +1030,7 @@
       const maxAir = 1 + Math.min(2, Math.floor(lvl / 6));
       if (spawnT <= 0 && falling.length < maxAir) {
         spawn();
-        spawnT = Math.max(0.38, 1.0 - lvl * 0.03) * rand(0.85, 1.2);
+        spawnT = Math.max(0.3, 0.8 - lvl * 0.024) * rand(0.85, 1.2);
       }
       for (let k = falling.length - 1; k >= 0; k--) {
         const f = falling[k];
