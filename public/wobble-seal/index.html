@@ -68,11 +68,10 @@
     ['#ffc400', '#ffe766'],
     ['#10c463', '#6cf0a6'],
   ];
-  const COMBO_WORDS = ['PERFECT!', 'DOUBLE!', 'TRIPLE!', 'ON FIRE!', 'BALL-ANCED!', 'SEALTASTIC!', 'UNSTOPPABLE!', 'LEGENDARY!'];
-  const SMALL_WORDS = ['boop', 'bonk', 'arf!', 'nice', 'oop!', 'yes!', 'boing'];
+  const COMBO_WORDS = ['ピタッ!', 'ダブル!', 'トリプル!', 'アツイ!!', 'スゴイ!!', 'サイコー!!', 'ムテキ!!', 'デンセツ!!'];
   // Katakana sound-effect stickers.
   const JP_CATCH = ['ポン!', 'ドン!', 'ヤッタ!', 'ボヨン!', 'ピタッ!', 'オウ!'];
-  const JP_BIG = ['スゴイ!!', 'キター!!', 'サイコー!!', 'ヤバイ!!'];
+  const JP_BIG = ['キター!!', 'ヤバイ!!', 'オオー!!', 'ワーイ!!'];
   const JP_MISS = ['ガーン!!', 'ギャー!!', 'アアッ!!'];
   const JP_JUNK = ['ナニ?!', 'ドーン!!', 'エエッ?!'];
 
@@ -300,7 +299,7 @@
     ctx.fill();
   }
   const JUNK = [
-    { label: 'STINKY SHOE!', sfx: 'honk', col: '#ff4d6d', draw(r) {
+    { label: 'クツ!', sfx: 'honk', col: '#ff4d6d', draw(r) {
       ctx.fillStyle = '#ff4d6d';
       ctx.beginPath();
       ctx.moveTo(-r * 0.95, r * 0.3);
@@ -331,7 +330,7 @@
       ctx.moveTo(-r * 0.2, -r * 0.7); ctx.quadraticCurveTo(0, -r * 0.9, -r * 0.2, -r * 1.05);
       ctx.stroke();
     } },
-    { label: 'WHOSE BRA?!', sfx: 'boing', col: '#ff8fab', draw(r) {
+    { label: 'ブラ?!', sfx: 'boing', col: '#ff8fab', draw(r) {
       ctx.strokeStyle = '#ff5c8a';
       ctx.lineWidth = r * 0.09;
       ctx.lineCap = 'round';
@@ -353,7 +352,7 @@
       ctx.arc(0, -r * 0.05, r * 0.1, 0, Math.PI * 2);
       ctx.fill();
     } },
-    { label: 'NICE BOXERS', sfx: 'slap', col: '#4cc9f0', draw(r) {
+    { label: 'パンツ!', sfx: 'slap', col: '#4cc9f0', draw(r) {
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.moveTo(-r * 0.85, -r * 0.4);
@@ -372,7 +371,7 @@
       ctx.roundRect(-r * 0.9, -r * 0.62, r * 1.8, r * 0.26, r * 0.08);
       ctx.fill();
     } },
-    { label: 'LIFTOFF!', sfx: 'whoosh', col: '#ff9f1c', draw(r) {
+    { label: 'ロケット!', sfx: 'whoosh', col: '#ff9f1c', draw(r) {
       ctx.fillStyle = Math.random() < 0.5 ? '#ffd166' : '#ff9f1c';
       ctx.beginPath();
       ctx.moveTo(-r * 0.22, r * 0.55);
@@ -406,7 +405,7 @@
       ctx.fillStyle = '#4cc9f0';
       ctx.beginPath(); ctx.arc(0, -r * 0.15, r * 0.14, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'VROOM VROOM', sfx: 'vroom', col: '#7d8597', draw(r) {
+    { label: 'ブルルン!', sfx: 'vroom', col: '#7d8597', draw(r) {
       ctx.fillStyle = '#979dac';
       for (let k = 0; k < 3; k++) {
         ctx.beginPath();
@@ -434,7 +433,7 @@
       ctx.beginPath(); ctx.arc(0, 0, r * 0.08, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     } },
-    { label: 'QUACK!', sfx: 'quack', col: '#ffd166', draw(r) {
+    { label: 'ガーガー!', sfx: 'quack', col: '#ffd166', draw(r) {
       ctx.fillStyle = '#ffd166';
       ctx.beginPath(); ctx.ellipse(0, r * 0.2, r * 0.85, r * 0.52, 0, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(r * 0.32, -r * 0.4, r * 0.4, 0, Math.PI * 2); ctx.fill();
@@ -445,7 +444,7 @@
       ctx.fillStyle = INK;
       ctx.beginPath(); ctx.arc(r * 0.45, -r * 0.5, r * 0.07, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'ONE SOCK??', sfx: 'squeak', col: '#ff595e', draw(r) {
+    { label: 'クツシタ?!', sfx: 'squeak', col: '#ff595e', draw(r) {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.lineWidth = r * 0.6;
@@ -462,7 +461,7 @@
       ctx.stroke();
       ctx.setLineDash([]);
     } },
-    { label: 'CLANG!', sfx: 'clang', col: '#3d405b', draw(r) {
+    { label: 'ガキーン!', sfx: 'clang', col: '#3d405b', draw(r) {
       ctx.fillStyle = '#3d405b';
       ctx.beginPath();
       ctx.moveTo(-r * 0.95, -r * 0.45);
@@ -480,7 +479,7 @@
       ctx.fillStyle = 'rgba(255,255,255,0.25)';
       ctx.fillRect(-r * 0.85, -r * 0.42, r * 1.3, r * 0.07);
     } },
-    { label: 'FISHY!', sfx: 'whomp', col: '#4cc9f0', draw(r) {
+    { label: 'サカナ!', sfx: 'whomp', col: '#4cc9f0', draw(r) {
       ctx.fillStyle = '#3a86ff';
       ctx.beginPath();
       ctx.moveTo(-r * 0.55, 0);
@@ -494,7 +493,7 @@
       ctx.fillStyle = INK;
       ctx.beginPath(); ctx.arc(r * 0.43, -r * 0.1, r * 0.06, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'PLUNGE!', sfx: 'whomp', col: '#d62828', draw(r) {
+    { label: 'スッポン!', sfx: 'whomp', col: '#d62828', draw(r) {
       ctx.fillStyle = '#c08552';
       ctx.beginPath();
       ctx.roundRect(-r * 0.09, -r * 1.0, r * 0.18, r * 1.3, r * 0.08);
@@ -505,7 +504,7 @@
       ctx.fill();
       ctx.fillRect(-r * 0.66, r * 0.55, r * 1.32, r * 0.12);
     } },
-    { label: 'MEOW?!', sfx: 'meow', col: '#ff9f43', draw(r) {
+    { label: 'ニャー!', sfx: 'meow', col: '#ff9f43', draw(r) {
       ctx.strokeStyle = '#ff9f43';
       ctx.lineWidth = r * 0.16;
       ctx.lineCap = 'round';
@@ -532,7 +531,7 @@
       for (const s of [-1, 1]) for (const dy of [-0.04, 0.04]) { ctx.moveTo(-r * 0.1 + s * r * 0.18, -r * 0.14); ctx.lineTo(-r * 0.1 + s * r * 0.55, -r * (0.14 - dy * 3)); }
       ctx.stroke();
     } },
-    { label: 'WOOF!', sfx: 'woof', col: '#c68b59', draw(r) {
+    { label: 'ワン!', sfx: 'woof', col: '#c68b59', draw(r) {
       ctx.fillStyle = '#7f5539';
       for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * r * 0.6, 0, r * 0.22, r * 0.5, s * 0.3, 0, Math.PI * 2); ctx.fill(); }
       ctx.fillStyle = '#c68b59';
@@ -545,7 +544,7 @@
       ctx.beginPath(); ctx.ellipse(0, r * 0.17, r * 0.13, r * 0.09, 0, 0, Math.PI * 2); ctx.fill();
       for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(s * r * 0.24, -r * 0.2, r * 0.07, 0, Math.PI * 2); ctx.fill(); }
     } },
-    { label: 'OH NO, POOP', sfx: 'fart', col: '#8d5524', draw(r) {
+    { label: 'ウンチ!', sfx: 'fart', col: '#8d5524', draw(r) {
       ctx.fillStyle = '#8d5524';
       ctx.beginPath(); ctx.ellipse(0, r * 0.45, r * 0.85, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.ellipse(0, r * 0.1, r * 0.65, r * 0.26, 0, 0, Math.PI * 2); ctx.fill();
@@ -566,7 +565,7 @@
       ctx.lineCap = 'round';
       ctx.beginPath(); ctx.arc(0, r * 0.3, r * 0.18, 0.3, Math.PI - 0.3); ctx.stroke();
     } },
-    { label: 'SUSHI!', sfx: 'ding', col: '#ff8c42', draw(r) {
+    { label: 'スシ!', sfx: 'ding', col: '#ff8c42', draw(r) {
       ctx.fillStyle = '#fffdf7';
       ctx.beginPath(); ctx.roundRect(-r * 0.85, -r * 0.05, r * 1.7, r * 0.6, r * 0.25); ctx.fill();
       ctx.fillStyle = '#ece6d6';
@@ -581,7 +580,7 @@
       ctx.fillStyle = '#1b4332';
       ctx.fillRect(-r * 0.18, -r * 0.44, r * 0.36, r * 0.98);
     } },
-    { label: 'SMOOCH!', sfx: 'kiss', col: '#e63946', draw(r) {
+    { label: 'チュッ!', sfx: 'kiss', col: '#e63946', draw(r) {
       ctx.fillStyle = '#e63946';
       ctx.beginPath(); ctx.moveTo(-r * 0.25, -r * 0.2); ctx.lineTo(-r * 0.25, -r * 0.7); ctx.lineTo(r * 0.25, -r * 1.0); ctx.lineTo(r * 0.25, -r * 0.2); ctx.fill();
       ctx.fillStyle = '#e9c46a';
@@ -591,7 +590,7 @@
       ctx.fillStyle = '#e9c46a';
       ctx.fillRect(-r * 0.36, r * 0.02, r * 0.72, r * 0.1);
     } },
-    { label: 'NICE WIG', sfx: 'boing', col: '#c77dff', draw(r) {
+    { label: 'カツラ!', sfx: 'boing', col: '#c77dff', draw(r) {
       ctx.fillStyle = '#9d4edd';
       ctx.beginPath(); ctx.ellipse(0, r * 0.3, r * 0.5, r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#c77dff';
@@ -606,7 +605,7 @@
       ctx.fillStyle = 'rgba(255,255,255,0.4)';
       for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(-r * 0.5 + k * r * 0.25, -r * 0.45 + Math.abs(k - 2) * r * 0.1, r * 0.06, 0, Math.PI * 2); ctx.fill(); }
     } },
-    { label: 'GOTTA CATCH IT', sfx: 'ball', col: '#ee1515', draw(r) {
+    { label: 'ゲットだぜ!', sfx: 'ball', col: '#ee1515', draw(r) {
       ctx.fillStyle = '#fff';
       ctx.beginPath(); ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#ee1515';
@@ -623,7 +622,7 @@
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.beginPath(); ctx.ellipse(-r * 0.4, -r * 0.45, r * 0.16, r * 0.09, -0.6, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'BUSTER SWORD', sfx: 'shing', col: '#adb5bd', draw(r) {
+    { label: 'バスターソード!', sfx: 'shing', col: '#adb5bd', draw(r) {
       ctx.fillStyle = '#ced4da';
       ctx.beginPath(); ctx.moveTo(-r * 1.15, r * 0.22); ctx.lineTo(-r * 0.9, -r * 0.28); ctx.lineTo(r * 0.5, -r * 0.28); ctx.lineTo(r * 0.5, r * 0.22); ctx.fill();
       ctx.fillStyle = '#f1f3f5';
@@ -642,7 +641,7 @@
       ctx.fillStyle = '#adb5bd';
       ctx.beginPath(); ctx.arc(r * 1.16, -r * 0.02, r * 0.09, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'BANG BANG BANG', sfx: 'gun', col: '#d4af37', draw(r) {
+    { label: 'バンバン!', sfx: 'gun', col: '#d4af37', draw(r) {
       ctx.fillStyle = '#1a1a1a';
       ctx.beginPath(); ctx.roundRect(-r * 0.95, -r * 0.42, r * 1.6, r * 0.32, r * 0.06); ctx.fill();
       ctx.beginPath(); ctx.moveTo(r * 0.22, -r * 0.12); ctx.lineTo(r * 0.62, -r * 0.12); ctx.lineTo(r * 0.82, r * 0.75); ctx.lineTo(r * 0.42, r * 0.75); ctx.fill();
@@ -656,7 +655,7 @@
       ctx.fillStyle = '#e63946';
       ctx.beginPath(); ctx.arc(-r * 0.1, -r * 0.28, r * 0.07, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'MASTER SWORD', sfx: 'chime', col: '#4361ee', draw(r) {
+    { label: 'マスターソード!', sfx: 'chime', col: '#4361ee', draw(r) {
       ctx.fillStyle = '#e9ecef';
       ctx.beginPath(); ctx.moveTo(-r * 1.2, 0); ctx.lineTo(-r * 1.0, -r * 0.13); ctx.lineTo(r * 0.35, -r * 0.13); ctx.lineTo(r * 0.35, r * 0.13); ctx.lineTo(-r * 1.0, r * 0.13); ctx.fill();
       ctx.fillStyle = '#adb5bd';
@@ -675,7 +674,7 @@
       ctx.fillStyle = '#ffd166';
       ctx.beginPath(); ctx.arc(r * 0.45, 0, r * 0.08, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'KEYBLADE!', sfx: 'chime', col: '#ffd60a', draw(r) {
+    { label: 'キーブレード!', sfx: 'chime', col: '#ffd60a', draw(r) {
       ctx.fillStyle = '#ced4da';
       ctx.fillRect(-r * 0.95, -r * 0.07, r * 1.45, r * 0.14);
       ctx.fillRect(-r * 1.02, -r * 0.07, r * 0.15, r * 0.48);
@@ -691,7 +690,7 @@
       ctx.fillStyle = '#ffd60a';
       ctx.beginPath(); ctx.arc(r * 1.12, r * 0.48, r * 0.09, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'ENERGY SWORD', sfx: 'zap', col: '#4cc9f0', draw(r) {
+    { label: 'ビームソード!', sfx: 'zap', col: '#4cc9f0', draw(r) {
       ctx.shadowColor = '#4cc9f0';
       ctx.shadowBlur = r * 0.4;
       for (const [fill, k] of [['#00b4d8', 1], ['#e0fbfc', 0.45]]) {
@@ -710,7 +709,7 @@
       ctx.fillStyle = '#212529';
       ctx.fillRect(r * 0.25, -r * 0.05, r * 0.4, r * 0.1);
     } },
-    { label: 'DIAMOND SWORD', sfx: 'ding', col: '#2ec4b6', draw(r) {
+    { label: 'ダイヤソード!', sfx: 'ding', col: '#2ec4b6', draw(r) {
       const p = r * 0.2;
       ctx.rotate(-Math.PI / 5);
       for (let i = 0; i < 7; i++) {
@@ -731,7 +730,7 @@
       ctx.fillStyle = '#2b2d42';
       ctx.fillRect(r * 0.9, -p * 0.5, p, p);
     } },
-    { label: 'PORTAL GUN', sfx: 'zap', col: '#3a86ff', draw(r) {
+    { label: 'ポータル!', sfx: 'zap', col: '#3a86ff', draw(r) {
       ctx.fillStyle = '#6c757d';
       ctx.fillRect(r * 0.2, r * 0.2, r * 0.25, r * 0.5);
       ctx.fillStyle = '#f8f9fa';
@@ -751,7 +750,7 @@
       ctx.beginPath(); ctx.arc(-r * 0.9, 0, r * 0.16, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
     } },
-    { label: 'PIZZA TIME', sfx: 'honk', col: '#ffb703', draw(r) {
+    { label: 'ピザ!', sfx: 'honk', col: '#ffb703', draw(r) {
       ctx.fillStyle = '#e09f3e';
       ctx.beginPath(); ctx.moveTo(-r * 0.85, -r * 0.55); ctx.lineTo(r * 0.85, -r * 0.55); ctx.lineTo(0, r * 0.9); ctx.fill();
       ctx.fillStyle = '#ffd166';
@@ -761,7 +760,7 @@
       ctx.fillStyle = '#c97c2c';
       ctx.beginPath(); ctx.roundRect(-r * 0.92, -r * 0.7, r * 1.84, r * 0.24, r * 0.12); ctx.fill();
     } },
-    { label: 'BANANA!', sfx: 'boing', col: '#ffd60a', draw(r) {
+    { label: 'バナナ!', sfx: 'boing', col: '#ffd60a', draw(r) {
       const a0 = 0.2 * Math.PI, a1 = 0.8 * Math.PI, cy = -r * 0.75, rr = r * 1.0;
       ctx.strokeStyle = '#ffd60a';
       ctx.lineWidth = r * 0.4;
@@ -773,7 +772,7 @@
       ctx.fillStyle = '#6f4e37';
       for (const a of [a0, a1]) { ctx.beginPath(); ctx.arc(Math.cos(a) * rr, cy + Math.sin(a) * rr, r * 0.09, 0, Math.PI * 2); ctx.fill(); }
     } },
-    { label: 'TP EMERGENCY', sfx: 'whoosh', col: '#e9ecef', draw(r) {
+    { label: 'カミ!', sfx: 'whoosh', col: '#e9ecef', draw(r) {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(r * 0.25, 0, r * 0.4, r * 0.85);
       ctx.strokeStyle = '#ced4da';
@@ -789,7 +788,7 @@
       ctx.fillStyle = '#adb5bd';
       ctx.beginPath(); ctx.ellipse(0, -r * 0.5, r * 0.2, r * 0.07, 0, 0, Math.PI * 2); ctx.fill();
     } },
-    { label: 'CONE ZONE', sfx: 'honk', col: '#ff6d00', draw(r) {
+    { label: 'コーン!', sfx: 'honk', col: '#ff6d00', draw(r) {
       ctx.save();
       ctx.fillStyle = '#ff6d00';
       ctx.beginPath(); ctx.moveTo(-r * 0.6, r * 0.6); ctx.lineTo(-r * 0.12, -r * 0.95); ctx.lineTo(r * 0.12, -r * 0.95); ctx.lineTo(r * 0.6, r * 0.6); ctx.closePath(); ctx.fill();
@@ -801,7 +800,7 @@
       ctx.fillStyle = '#e85d04';
       ctx.beginPath(); ctx.roundRect(-r * 0.85, r * 0.55, r * 1.7, r * 0.22, r * 0.06); ctx.fill();
     } },
-    { label: 'DONUT!', sfx: 'ding', col: '#ff8fab', draw(r) {
+    { label: 'ドーナツ!', sfx: 'ding', col: '#ff8fab', draw(r) {
       ctx.fillStyle = '#e9a46a';
       ctx.beginPath(); ctx.ellipse(0, r * 0.1, r * 0.9, r * 0.58, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#ff8fab';
@@ -848,7 +847,7 @@
   const ring = (x, y, c) => rings.push({ x, y, c, t: 0 });
   const SIZES = { s: [0.55, 0.75], m: [0.9, 0.95], l: [1.2, 1.1], xl: [1.65, 1.5] };
   function pop(text, x, y, size, color = '#ff7a00', fill = '#ffffff') {
-    pops.push({ text, x, y, t: 0, size, color, fill, burst: pick(['#ffd000', '#ffffff', '#00e5ff', '#ff2e93']), rot: rand(-0.25, 0.25) });
+    pops.push({ text, x, y, t: 0, size, color, fill, rot: rand(-0.25, 0.25) });
   }
   // A katakana sticker slapped somewhere near (x, y).
   function jp(list, x, y) {
@@ -879,7 +878,7 @@
       const y = landY();
       burst(f.x, y, '#ffd000', 24, 300);
       confetti(f.x, y, 20);
-      pop('+1 LIFE', f.x, y - R * 1.2, 'l', '#ff7a00');
+      pop('+1', f.x, y - R * 1.2, 'xl', '#ff7a00', '#ffd000');
       sfx('arf');
       flash('#ffb3c1', 0.35);
       sfx('chime');
@@ -923,17 +922,15 @@
       freeze = 0.05;
       buzz(25);
     } else {
-      if (Math.random() < 0.5) pop(pick(SMALL_WORDS), sx + rand(-R, R), sy - R * 1.3, 's');
       buzz(10);
     }
     if (lvl > tier(n - 1)) {
-      pop('FASTER!', W / 2, H * 0.34, 'xl', '#ff4d6d');
-      pop('ハヤイ!!', W * rand(0.25, 0.75), H * 0.24, 'l', '#00a8f0', '#ffd000');
+      pop('ハヤイ!!', W / 2, H * 0.34, 'xl', '#ff4d6d', '#ffd000');
       sfx('riser');
       flash('#ffd166', 0.3);
       addShake(14);
     }
-    const banner = { 30: 'JUNK INCOMING', 45: 'MORE JUNK!!', 60: 'ALL JUNK, ALL THE TIME' }[n];
+    const banner = { 30: 'ガラクタ!!', 45: 'モット ガラクタ!!', 60: 'ゼンブ ガラクタ!!' }[n];
     if (banner) {
       pop(banner, W / 2, H * 0.42, 'xl', '#9b5de5');
       sfx('siren');
@@ -951,7 +948,7 @@
     addShake(18);
     flash('#ff4d6d', 0.4);
     burst(f.x, H - 6, f.kind === 'junk' ? f.j.col : f.f.c, 36, 420);
-    pop('SPLAT!', f.x, H - R * 2.4, 'xl', '#ff4d6d');
+    pop('ベチャ!!', f.x, H - R * 2.4, 'xl', '#ff4d6d');
     jp(JP_MISS, W / 2, H * 0.55);
     panic(0.9);
     sfx('gasp');
@@ -1143,6 +1140,7 @@
       ctx.fillStyle = `rgba(255,255,255,${beat * 0.1})`;
       ctx.fillRect(-40, -40, W + 80, H + 80);
     }
+    speedLines();
     // Sparkles drifting past as the camera climbs.
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     for (let k = 0; k < 14; k++) {
@@ -1152,6 +1150,30 @@
       const y = (((hy - Math.floor(hy)) * span + cam * (0.25 + (k % 3) * 0.12)) % span) - 40;
       const tw = 0.6 + 0.4 * Math.sin(time * 3 + k);
       sparkle(x, y, (4 + (k % 4) * 2.5) * tw * (1 + beat * 0.4));
+    }
+  }
+
+  // Vertical speed lines rushing down the screen: more, longer, faster and
+  // bolder the taller the tower gets.
+  function speedLines() {
+    const n = stack.length;
+    if (n < 2) return;
+    const count = Math.min(56, Math.floor(n * 1.4));
+    const v = H * (1.2 + Math.min(n, 80) * 0.04);
+    const grow = 1 + Math.min(n, 60) * 0.015;
+    ctx.lineCap = 'round';
+    for (let k = 0; k < count; k++) {
+      const hx = Math.sin(k * 91.7 + 3.1) * 43758.5453, hl = Math.sin(k * 17.3 + 1.7) * 9631.7;
+      const fx = hx - Math.floor(hx), fl = hl - Math.floor(hl);
+      const len = H * (0.12 + fl * 0.3) * grow;
+      const span = H + len;
+      const y = ((fl * span + time * v * (0.7 + fx * 0.6)) % span) - len;
+      ctx.strokeStyle = k % 3 ? `rgba(255,255,255,${Math.min(0.85, 0.3 + n * 0.012)})` : `rgba(0,0,0,${Math.min(0.5, 0.15 + n * 0.008)})`;
+      ctx.lineWidth = 1.5 + (k % 4) + Math.min(n, 60) * 0.035;
+      ctx.beginPath();
+      ctx.moveTo(fx * W, y);
+      ctx.lineTo(fx * W, y + len);
+      ctx.stroke();
     }
   }
 
@@ -1535,27 +1557,6 @@
     }
   }
 
-  // Jagged comic burst behind big callouts.
-  function balloon(w, h, color, a, t) {
-    ctx.save();
-    ctx.globalAlpha = a;
-    ctx.fillStyle = color;
-    ctx.strokeStyle = BLACK;
-    ctx.lineWidth = 3;
-    ctx.lineJoin = 'miter';
-    ctx.beginPath();
-    const n = 36;
-    for (let k = 0; k < n; k++) {
-      const ang = (k / n) * Math.PI * 2 + t * 0.6;
-      const rr = k % 2 ? 0.8 : 1 + (k % 5) * 0.06;
-      ctx.lineTo(Math.cos(ang) * w * 0.6 * rr, Math.sin(ang) * h * 1.2 * rr);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-  }
-
   // Arcade lettering: each letter bounces and tilts, with a white face, a
   // black outline, a coloured outer rim and a hard shadow.
   function comic(str, x, y, size, fill = '#ffffff', outer = '#ff7a00', alpha = 1, wob = 0) {
@@ -1597,7 +1598,7 @@
   function pill(str, x, y, size, alpha = 1, bg = BLACK, fg = '#ffffff') {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.font = `800 ${size}px ${BODY}`;
+    ctx.font = `${size}px ${POP}`;
     const w = ctx.measureText(str).width + size * 1.6, h = size * 1.9;
     ctx.fillStyle = bg;
     ctx.beginPath();
@@ -1628,7 +1629,6 @@
     ctx.scale(back * fit, back * fit);
     if (p.size === 's') comic(p.text, 0, 0, size, '#ffd000', '#ffffff', a);
     else {
-      if (p.size === 'l' || p.size === 'xl') balloon(w, size, p.burst, a, t);
       comic(p.text, 0, 0, size, p.fill, p.color, a, t * 10);
       ctx.globalAlpha = a;
       ctx.fillStyle = '#ffd000';
@@ -1813,16 +1813,16 @@
       }
       comic('SEAL!!', 0, size * 1.05, size * 0.75, '#ffd000', '#00a8f0', 1, time * 3 + 2);
       ctx.restore();
-      pill('HOLD & SLIDE TO CATCH', W / 2, ty + size * 2.2, R * 0.42);
-      if (best) pill('BEST ' + best, W / 2, ty + size * 2.2 + R * 1.1, R * 0.36, 1, '#ffffff', BLACK);
+      pill('◀ ホールド＆スライド ▶', W / 2, ty + size * 2.2, R * 0.42);
+      if (best) pill('ベスト ' + best, W / 2, ty + size * 2.2 + R * 1.1, R * 0.36, 1, '#ffffff', BLACK);
     } else if (state === 'over') {
       const a = clamp(stateT * 2.5, 0, 1);
-      comic('GAME OVER!!', W / 2, H * 0.22, R * 0.95, '#ffffff', '#00a8f0', a, time * 3);
+      comic('ゲームオーバー!!', W / 2, H * 0.22, R * 0.8, '#ffffff', '#00a8f0', a, time * 3);
       comic(String(score), W / 2, H * 0.22 + R * 2.4, R * 2.6, '#ffd000', '#ff2e93', a, time * 2);
-      pill(score >= best && score > 0 ? 'NEW BEST!' : 'BEST ' + best, W / 2, H * 0.22 + R * 4.4, R * 0.42, a, '#ffffff', BLACK);
+      pill(score >= best && score > 0 ? 'ハイスコア!!' : 'ベスト ' + best, W / 2, H * 0.22 + R * 4.4, R * 0.42, a, '#ffffff', BLACK);
       if (stateT > 0.7) {
         const pulse = reduceMotion ? 1 : 0.75 + Math.sin(stateT * 5) * 0.25;
-        pill('TAP TO PLAY AGAIN', W / 2, H * 0.22 + R * 5.6, R * 0.45, pulse);
+        pill('タップで もういちど!', W / 2, H * 0.22 + R * 5.6, R * 0.45, pulse);
       }
     }
     drawMute();
@@ -1840,7 +1840,7 @@
   }
   requestAnimationFrame(frame);
   if (document.fonts && document.fonts.load) {
-    document.fonts.load(`40px ${POP}`, 'WOBBLE SEAL ' + [...JP_CATCH, ...JP_BIG, ...JP_MISS, ...JP_JUNK, 'ハヤイ!!'].join('')).catch(() => {});
+    document.fonts.load(`40px ${POP}`, 'WOBBLE SEAL +0123456789◀▶＆ ' + [...JP_CATCH, ...JP_BIG, ...JP_MISS, ...JP_JUNK, ...COMBO_WORDS, ...JUNK.map((j) => j.label), 'ハヤイ!!ガラクタモットゼンブベチャゲームオーバーハイスコアベストホールドスライドタップでもういちど'].join('')).catch(() => {});
     document.fonts.load(`800 20px ${BODY}`).catch(() => {});
   }
 })();
