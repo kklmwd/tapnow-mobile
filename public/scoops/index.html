@@ -46,7 +46,6 @@
   const DISPLAY = "'Bagel Fat One', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif";
   const BODY = "'Nunito', 'Avenir Next', system-ui, sans-serif";
   const INK = '#3b2a4a';
-  const JUNK_AT = 30;
 
   const FLAVORS = [
     { name: 'strawberry', c: '#f7a8b8', d: '#e48aa0' },
@@ -207,6 +206,15 @@
     arp: (c, t = now()) => { for (let k = 0; k < 4; k++) tone(note(c + k * 2 + 5), 0.12, 'square', 0.025, 1, t + k * 0.045); },
     sad: (t = now()) => [392, 370, 349, 311].forEach((f, i) => tone(f, i === 3 ? 0.9 : 0.3, 'sawtooth', 0.06, i === 3 ? 0.92 : 1, t + i * 0.33)),
     whomp: () => { tone(110, 0.25, 'sine', 0.2, 0.4); noise(0.2, 0.12, 'lowpass', 600, 80); },
+    meow: (t = now()) => { tone(520, 0.14, 'triangle', 0.07, 1.5, t); tone(780, 0.32, 'triangle', 0.07, 0.6, t + 0.13); },
+    woof: (t = now()) => { for (let k = 0; k < 2; k++) { noise(0.09, 0.14, 'bandpass', 700, 0, t + k * 0.18); tone(320, 0.1, 'square', 0.05, 0.5, t + k * 0.18); } },
+    fart: () => { tone(80, 0.55, 'sawtooth', 0.11, 0.7); tone(86, 0.55, 'square', 0.05, 0.6); noise(0.45, 0.08, 'lowpass', 300); },
+    kiss: () => { noise(0.05, 0.12, 'highpass', 3000); tone(1800, 0.09, 'sine', 0.07, 0.5); },
+    ding: () => { tone(1568, 0.5, 'triangle', 0.06); tone(2093, 0.4, 'sine', 0.03); },
+    ball: (t = now()) => { for (let k = 0; k < 3; k++) tone(1046, 0.05, 'square', 0.04, 1, t + k * 0.12); noise(0.05, 0.18, 'bandpass', 2500, 0, t + 0.4); },
+    shing: () => { noise(0.35, 0.12, 'highpass', 3000, 9000); tone(2600, 0.4, 'sine', 0.04, 1.1); },
+    gun: (t = now()) => { for (let k = 0; k < 3; k++) { noise(0.14, 0.3, 'lowpass', 4000, 150, t + k * 0.11); tone(140, 0.08, 'square', 0.06, 0.4, t + k * 0.11); } },
+    zap: () => { tone(220, 0.25, 'sawtooth', 0.06, 6); noise(0.2, 0.06, 'bandpass', 2000, 6000); },
   };
   const sfx = (name, ...a) => { if (audio) SFX[name](...a); };
   const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
@@ -483,7 +491,328 @@
       ctx.fill();
       ctx.fillRect(-r * 0.66, r * 0.55, r * 1.32, r * 0.12);
     } },
+    { label: 'MEOW?!', sfx: 'meow', col: '#ff9f43', draw(r) {
+      ctx.strokeStyle = '#ff9f43';
+      ctx.lineWidth = r * 0.16;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(r * 0.55, r * 0.5); ctx.quadraticCurveTo(r * 1.1, r * 0.3, r * 0.9, -r * 0.2); ctx.stroke();
+      ctx.fillStyle = '#ff9f43';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.3, r * 0.7, r * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(-r * 0.1, -r * 0.3, r * 0.45, 0, Math.PI * 2); ctx.fill();
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.1 + s * r * 0.44, -r * 0.42);
+        ctx.lineTo(-r * 0.1 + s * r * 0.36, -r * 0.9);
+        ctx.lineTo(-r * 0.1 + s * r * 0.06, -r * 0.7);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#e67e22';
+      for (let k = 0; k < 3; k++) ctx.fillRect(-r * 0.35 + k * r * 0.28, r * 0.0, r * 0.1, r * 0.3);
+      ctx.fillStyle = INK;
+      for (const ex of [-r * 0.28, r * 0.08]) { ctx.beginPath(); ctx.arc(ex, -r * 0.32, r * 0.065, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#ff6b81';
+      ctx.beginPath(); ctx.moveTo(-r * 0.17, -r * 0.2); ctx.lineTo(-r * 0.03, -r * 0.2); ctx.lineTo(-r * 0.1, -r * 0.12); ctx.fill();
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = r * 0.03;
+      ctx.beginPath();
+      for (const s of [-1, 1]) for (const dy of [-0.04, 0.04]) { ctx.moveTo(-r * 0.1 + s * r * 0.18, -r * 0.14); ctx.lineTo(-r * 0.1 + s * r * 0.55, -r * (0.14 - dy * 3)); }
+      ctx.stroke();
+    } },
+    { label: 'WOOF!', sfx: 'woof', col: '#c68b59', draw(r) {
+      ctx.fillStyle = '#7f5539';
+      for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * r * 0.6, 0, r * 0.22, r * 0.5, s * 0.3, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#c68b59';
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.05, r * 0.62, r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ede0d4';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.28, r * 0.36, r * 0.26, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff6b81';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.52, r * 0.1, r * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = INK;
+      ctx.beginPath(); ctx.ellipse(0, r * 0.17, r * 0.13, r * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+      for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(s * r * 0.24, -r * 0.2, r * 0.07, 0, Math.PI * 2); ctx.fill(); }
+    } },
+    { label: 'OH NO, POOP', sfx: 'fart', col: '#8d5524', draw(r) {
+      ctx.fillStyle = '#8d5524';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.45, r * 0.85, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, r * 0.1, r * 0.65, r * 0.26, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.22, r * 0.45, r * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.2, -r * 0.35);
+      ctx.quadraticCurveTo(r * 0.1, -r * 0.7, r * 0.15, -r * 0.85);
+      ctx.quadraticCurveTo(r * 0.25, -r * 0.5, r * 0.25, -r * 0.35);
+      ctx.fill();
+      for (const s of [-1, 1]) {
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(s * r * 0.2, r * 0.06, r * 0.13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = INK;
+        ctx.beginPath(); ctx.arc(s * r * 0.2, r * 0.08, r * 0.06, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = r * 0.06;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(0, r * 0.3, r * 0.18, 0.3, Math.PI - 0.3); ctx.stroke();
+    } },
+    { label: 'SUSHI!', sfx: 'ding', col: '#ff8c42', draw(r) {
+      ctx.fillStyle = '#fffdf7';
+      ctx.beginPath(); ctx.roundRect(-r * 0.85, -r * 0.05, r * 1.7, r * 0.6, r * 0.25); ctx.fill();
+      ctx.fillStyle = '#ece6d6';
+      for (let k = 0; k < 8; k++) { ctx.beginPath(); ctx.ellipse(-r * 0.6 + k * r * 0.17, r * (0.25 + (k % 2) * 0.12), r * 0.05, r * 0.03, k, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#ff8c42';
+      ctx.beginPath(); ctx.roundRect(-r * 0.95, -r * 0.42, r * 1.9, r * 0.5, r * 0.25); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+      ctx.lineWidth = r * 0.06;
+      ctx.beginPath();
+      for (let k = 0; k < 5; k++) { ctx.moveTo(-r * 0.75 + k * r * 0.35, -r * 0.36); ctx.lineTo(-r * 0.6 + k * r * 0.35, r * 0.02); }
+      ctx.stroke();
+      ctx.fillStyle = '#1b4332';
+      ctx.fillRect(-r * 0.18, -r * 0.44, r * 0.36, r * 0.98);
+    } },
+    { label: 'SMOOCH!', sfx: 'kiss', col: '#e63946', draw(r) {
+      ctx.fillStyle = '#e63946';
+      ctx.beginPath(); ctx.moveTo(-r * 0.25, -r * 0.2); ctx.lineTo(-r * 0.25, -r * 0.7); ctx.lineTo(r * 0.25, -r * 1.0); ctx.lineTo(r * 0.25, -r * 0.2); ctx.fill();
+      ctx.fillStyle = '#e9c46a';
+      ctx.fillRect(-r * 0.3, -r * 0.28, r * 0.6, r * 0.3);
+      ctx.fillStyle = '#2b2d42';
+      ctx.beginPath(); ctx.roundRect(-r * 0.36, 0, r * 0.72, r * 0.95, r * 0.08); ctx.fill();
+      ctx.fillStyle = '#e9c46a';
+      ctx.fillRect(-r * 0.36, r * 0.02, r * 0.72, r * 0.1);
+    } },
+    { label: 'NICE WIG', sfx: 'boing', col: '#c77dff', draw(r) {
+      ctx.fillStyle = '#9d4edd';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.3, r * 0.5, r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c77dff';
+      for (let k = 0; k <= 12; k++) {
+        const a = Math.PI + (k / 12) * Math.PI;
+        ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.72, Math.sin(a) * r * 0.6 + r * 0.1, r * 0.3, 0, Math.PI * 2); ctx.fill();
+      }
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.arc(s * r * 0.8, r * 0.38, r * 0.27, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(s * r * 0.72, r * 0.72, r * 0.24, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(-r * 0.5 + k * r * 0.25, -r * 0.45 + Math.abs(k - 2) * r * 0.1, r * 0.06, 0, Math.PI * 2); ctx.fill(); }
+    } },
+    { label: 'GOTTA CATCH IT', sfx: 'ball', col: '#ee1515', draw(r) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ee1515';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.85, Math.PI, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#222';
+      ctx.fillRect(-r * 0.85, -r * 0.07, r * 1.7, r * 0.14);
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = r * 0.08;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#222';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.27, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.17, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.ellipse(-r * 0.4, -r * 0.45, r * 0.16, r * 0.09, -0.6, 0, Math.PI * 2); ctx.fill();
+    } },
+    { label: 'BUSTER SWORD', sfx: 'shing', col: '#adb5bd', draw(r) {
+      ctx.fillStyle = '#ced4da';
+      ctx.beginPath(); ctx.moveTo(-r * 1.15, r * 0.22); ctx.lineTo(-r * 0.9, -r * 0.28); ctx.lineTo(r * 0.5, -r * 0.28); ctx.lineTo(r * 0.5, r * 0.22); ctx.fill();
+      ctx.fillStyle = '#f1f3f5';
+      ctx.fillRect(-r * 1.0, r * 0.12, r * 1.5, r * 0.1);
+      ctx.fillStyle = '#495057';
+      for (const hx of [r * 0.12, r * 0.32]) { ctx.beginPath(); ctx.arc(hx, -r * 0.04, r * 0.07, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#6c757d';
+      ctx.fillRect(r * 0.5, -r * 0.34, r * 0.12, r * 0.62);
+      ctx.fillStyle = '#5c4033';
+      ctx.fillRect(r * 0.62, -r * 0.1, r * 0.5, r * 0.16);
+      ctx.strokeStyle = '#3e2a20';
+      ctx.lineWidth = r * 0.03;
+      ctx.beginPath();
+      for (let k = 0; k < 4; k++) { ctx.moveTo(r * (0.67 + k * 0.12), -r * 0.1); ctx.lineTo(r * (0.73 + k * 0.12), r * 0.06); }
+      ctx.stroke();
+      ctx.fillStyle = '#adb5bd';
+      ctx.beginPath(); ctx.arc(r * 1.16, -r * 0.02, r * 0.09, 0, Math.PI * 2); ctx.fill();
+    } },
+    { label: 'BANG BANG BANG', sfx: 'gun', col: '#d4af37', draw(r) {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath(); ctx.roundRect(-r * 0.95, -r * 0.42, r * 1.6, r * 0.32, r * 0.06); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(r * 0.22, -r * 0.12); ctx.lineTo(r * 0.62, -r * 0.12); ctx.lineTo(r * 0.82, r * 0.75); ctx.lineTo(r * 0.42, r * 0.75); ctx.fill();
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = r * 0.06;
+      ctx.beginPath(); ctx.arc(r * 0.06, -r * 0.08, r * 0.17, 0, Math.PI); ctx.stroke();
+      ctx.fillStyle = '#d4af37';
+      ctx.fillRect(-r * 0.95, -r * 0.16, r * 1.6, r * 0.06);
+      ctx.fillRect(-r * 0.99, -r * 0.42, r * 0.08, r * 0.32);
+      ctx.beginPath(); ctx.ellipse(r * 0.53, r * 0.33, r * 0.08, r * 0.22, -0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e63946';
+      ctx.beginPath(); ctx.arc(-r * 0.1, -r * 0.28, r * 0.07, 0, Math.PI * 2); ctx.fill();
+    } },
+    { label: 'MASTER SWORD', sfx: 'chime', col: '#4361ee', draw(r) {
+      ctx.fillStyle = '#e9ecef';
+      ctx.beginPath(); ctx.moveTo(-r * 1.2, 0); ctx.lineTo(-r * 1.0, -r * 0.13); ctx.lineTo(r * 0.35, -r * 0.13); ctx.lineTo(r * 0.35, r * 0.13); ctx.lineTo(-r * 1.0, r * 0.13); ctx.fill();
+      ctx.fillStyle = '#adb5bd';
+      ctx.fillRect(-r * 0.9, -r * 0.02, r * 1.2, r * 0.04);
+      ctx.fillStyle = '#4361ee';
+      ctx.beginPath();
+      ctx.moveTo(r * 0.35, -r * 0.1);
+      ctx.quadraticCurveTo(r * 0.2, -r * 0.55, r * 0.52, -r * 0.5);
+      ctx.lineTo(r * 0.52, r * 0.5);
+      ctx.quadraticCurveTo(r * 0.2, r * 0.55, r * 0.35, r * 0.1);
+      ctx.fill();
+      ctx.fillStyle = '#7b2cbf';
+      ctx.fillRect(r * 0.52, -r * 0.08, r * 0.5, r * 0.16);
+      ctx.fillStyle = '#4361ee';
+      ctx.beginPath(); ctx.arc(r * 1.06, 0, r * 0.1, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath(); ctx.arc(r * 0.45, 0, r * 0.08, 0, Math.PI * 2); ctx.fill();
+    } },
+    { label: 'KEYBLADE!', sfx: 'chime', col: '#ffd60a', draw(r) {
+      ctx.fillStyle = '#ced4da';
+      ctx.fillRect(-r * 0.95, -r * 0.07, r * 1.45, r * 0.14);
+      ctx.fillRect(-r * 1.02, -r * 0.07, r * 0.15, r * 0.48);
+      ctx.fillRect(-r * 0.8, r * 0.07, r * 0.12, r * 0.24);
+      ctx.strokeStyle = '#ffd60a';
+      ctx.lineWidth = r * 0.1;
+      ctx.beginPath(); ctx.arc(r * 0.75, 0, r * 0.32, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#212529';
+      ctx.fillRect(r * 0.55, -r * 0.07, r * 0.42, r * 0.14);
+      ctx.strokeStyle = '#adb5bd';
+      ctx.lineWidth = r * 0.03;
+      ctx.beginPath(); ctx.moveTo(r * 1.07, 0); ctx.lineTo(r * 1.12, r * 0.4); ctx.stroke();
+      ctx.fillStyle = '#ffd60a';
+      ctx.beginPath(); ctx.arc(r * 1.12, r * 0.48, r * 0.09, 0, Math.PI * 2); ctx.fill();
+    } },
+    { label: 'ENERGY SWORD', sfx: 'zap', col: '#4cc9f0', draw(r) {
+      ctx.shadowColor = '#4cc9f0';
+      ctx.shadowBlur = r * 0.4;
+      for (const [fill, k] of [['#00b4d8', 1], ['#e0fbfc', 0.45]]) {
+        ctx.fillStyle = fill;
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(r * 0.1, s * r * 0.08 * (1 + k));
+          ctx.quadraticCurveTo(-r * 0.5, s * r * (0.2 + 0.32 * k), -r * 1.15, s * r * 0.12);
+          ctx.quadraticCurveTo(-r * 0.5, s * r * (0.2 + 0.08 * k), r * 0.1, s * r * 0.04);
+          ctx.fill();
+        }
+      }
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#495057';
+      ctx.beginPath(); ctx.roundRect(r * 0.05, -r * 0.18, r * 0.75, r * 0.36, r * 0.1); ctx.fill();
+      ctx.fillStyle = '#212529';
+      ctx.fillRect(r * 0.25, -r * 0.05, r * 0.4, r * 0.1);
+    } },
+    { label: 'DIAMOND SWORD', sfx: 'ding', col: '#2ec4b6', draw(r) {
+      const p = r * 0.2;
+      ctx.rotate(-Math.PI / 5);
+      for (let i = 0; i < 7; i++) {
+        const x = -r * 1.1 + i * p;
+        ctx.fillStyle = '#1b998b';
+        ctx.fillRect(x, -p * 1.5, p, i ? p * 3 : p);
+        if (i) {
+          ctx.fillStyle = '#8ff0e8';
+          ctx.fillRect(x, -p * 0.5, p, p);
+          ctx.fillStyle = '#3dd6d0';
+          ctx.fillRect(x, p * 0.5, p, p * 0.5);
+        }
+      }
+      ctx.fillStyle = '#2b2d42';
+      ctx.fillRect(r * 0.3, -p * 2, p, p * 4);
+      ctx.fillStyle = '#8d5524';
+      ctx.fillRect(r * 0.5, -p * 0.5, p * 2, p);
+      ctx.fillStyle = '#2b2d42';
+      ctx.fillRect(r * 0.9, -p * 0.5, p, p);
+    } },
+    { label: 'PORTAL GUN', sfx: 'zap', col: '#3a86ff', draw(r) {
+      ctx.fillStyle = '#6c757d';
+      ctx.fillRect(r * 0.2, r * 0.2, r * 0.25, r * 0.5);
+      ctx.fillStyle = '#f8f9fa';
+      ctx.beginPath(); ctx.ellipse(r * 0.3, 0, r * 0.65, r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#212529';
+      ctx.fillRect(-r * 0.3, -r * 0.33, r * 0.16, r * 0.66);
+      ctx.fillStyle = '#adb5bd';
+      ctx.beginPath(); ctx.roundRect(-r * 0.85, -r * 0.18, r * 0.6, r * 0.36, r * 0.08); ctx.fill();
+      ctx.strokeStyle = '#212529';
+      ctx.lineWidth = r * 0.06;
+      ctx.beginPath();
+      for (const s of [-1, 1]) { ctx.moveTo(-r * 0.6, s * r * 0.18); ctx.lineTo(-r * 1.0, s * r * 0.3); }
+      ctx.stroke();
+      ctx.shadowColor = '#3a86ff';
+      ctx.shadowBlur = r * 0.5;
+      ctx.fillStyle = '#3a86ff';
+      ctx.beginPath(); ctx.arc(-r * 0.9, 0, r * 0.16, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    } },
+    { label: 'PIZZA TIME', sfx: 'honk', col: '#ffb703', draw(r) {
+      ctx.fillStyle = '#e09f3e';
+      ctx.beginPath(); ctx.moveTo(-r * 0.85, -r * 0.55); ctx.lineTo(r * 0.85, -r * 0.55); ctx.lineTo(0, r * 0.9); ctx.fill();
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath(); ctx.moveTo(-r * 0.7, -r * 0.42); ctx.lineTo(r * 0.7, -r * 0.42); ctx.lineTo(0, r * 0.75); ctx.fill();
+      ctx.fillStyle = '#d62828';
+      for (const [px, py] of [[-0.25, -0.2], [0.25, -0.15], [0, 0.25]]) { ctx.beginPath(); ctx.arc(px * r, py * r, r * 0.13, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#c97c2c';
+      ctx.beginPath(); ctx.roundRect(-r * 0.92, -r * 0.7, r * 1.84, r * 0.24, r * 0.12); ctx.fill();
+    } },
+    { label: 'BANANA!', sfx: 'boing', col: '#ffd60a', draw(r) {
+      const a0 = 0.2 * Math.PI, a1 = 0.8 * Math.PI, cy = -r * 0.75, rr = r * 1.0;
+      ctx.strokeStyle = '#ffd60a';
+      ctx.lineWidth = r * 0.4;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(0, cy, rr, a0, a1); ctx.stroke();
+      ctx.strokeStyle = '#f4b400';
+      ctx.lineWidth = r * 0.08;
+      ctx.beginPath(); ctx.arc(0, cy, rr + r * 0.1, a0 + 0.1, a1 - 0.1); ctx.stroke();
+      ctx.fillStyle = '#6f4e37';
+      for (const a of [a0, a1]) { ctx.beginPath(); ctx.arc(Math.cos(a) * rr, cy + Math.sin(a) * rr, r * 0.09, 0, Math.PI * 2); ctx.fill(); }
+    } },
+    { label: 'TP EMERGENCY', sfx: 'whoosh', col: '#e9ecef', draw(r) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(r * 0.25, 0, r * 0.4, r * 0.85);
+      ctx.strokeStyle = '#ced4da';
+      ctx.lineWidth = r * 0.03;
+      ctx.setLineDash([r * 0.06, r * 0.05]);
+      ctx.beginPath(); ctx.moveTo(r * 0.25, r * 0.5); ctx.lineTo(r * 0.65, r * 0.5); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#f8f9fa';
+      ctx.fillRect(-r * 0.6, -r * 0.5, r * 1.2, r * 0.95);
+      ctx.beginPath(); ctx.ellipse(0, r * 0.45, r * 0.6, r * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e9ecef';
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.5, r * 0.6, r * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#adb5bd';
+      ctx.beginPath(); ctx.ellipse(0, -r * 0.5, r * 0.2, r * 0.07, 0, 0, Math.PI * 2); ctx.fill();
+    } },
+    { label: 'CONE ZONE', sfx: 'honk', col: '#ff6d00', draw(r) {
+      ctx.save();
+      ctx.fillStyle = '#ff6d00';
+      ctx.beginPath(); ctx.moveTo(-r * 0.6, r * 0.6); ctx.lineTo(-r * 0.12, -r * 0.95); ctx.lineTo(r * 0.12, -r * 0.95); ctx.lineTo(r * 0.6, r * 0.6); ctx.closePath(); ctx.fill();
+      ctx.clip();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-r, -r * 0.4, r * 2, r * 0.22);
+      ctx.fillRect(-r, r * 0.1, r * 2, r * 0.22);
+      ctx.restore();
+      ctx.fillStyle = '#e85d04';
+      ctx.beginPath(); ctx.roundRect(-r * 0.85, r * 0.55, r * 1.7, r * 0.22, r * 0.06); ctx.fill();
+    } },
+    { label: 'DONUT!', sfx: 'ding', col: '#ff8fab', draw(r) {
+      ctx.fillStyle = '#e9a46a';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.1, r * 0.9, r * 0.58, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff8fab';
+      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.8, r * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#b5713d';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.03, r * 0.25, r * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+      for (let k = 0; k < 10; k++) {
+        const a = k * 0.63, d = k % 2 ? 0.55 : 0.4;
+        ctx.save();
+        ctx.translate(Math.cos(a) * r * d, Math.sin(a) * r * d * 0.6);
+        ctx.rotate(a * 2);
+        ctx.fillStyle = SPRINKLES[k % SPRINKLES.length];
+        ctx.fillRect(-r * 0.08, -r * 0.03, r * 0.16, r * 0.06);
+        ctx.restore();
+      }
+    } },
   ];
+
+  // Share of drops that are junk: 40% at 30 scoops, 80% at 45, 100% from 60.
+  function junkRate(n) {
+    if (n < 30) return 0;
+    if (n < 45) return 0.4 + 0.4 * (n - 30) / 15;
+    if (n < 60) return 0.8 + 0.2 * (n - 45) / 15;
+    return 1;
+  }
 
   // ---------- effects ----------
   const addShake = (v) => { if (!reduceMotion) shake = Math.max(shake, v); };
@@ -515,7 +844,7 @@
     const base = { x: rand(R * 1.2, W - R * 1.2), y: -R * 1.5, vy: H * speedK * rand(0.9, 1.1), wob: rand(0, 6), rot: 0, spin: 0, passed: false };
     if (lives < 3 && n > 4 && Math.random() < 0.09) {
       falling.push({ ...base, kind: 'cherry' });
-    } else if (n >= JUNK_AT && Math.random() < Math.min(0.6, 0.3 + (n - JUNK_AT) * 0.01)) {
+    } else if (Math.random() < junkRate(n)) {
       falling.push({ ...base, kind: 'junk', j: pick(JUNK), spin: rand(-4, 4) });
     } else {
       falling.push({ ...base, kind: 'scoop', f: pick(FLAVORS), spr: Math.random() < 0.3, seed: Math.random() * 1000 });
@@ -575,8 +904,9 @@
       flash('#ffd166', 0.3);
       addShake(14);
     }
-    if (n === JUNK_AT) {
-      pop('JUNK INCOMING', W / 2, H * 0.42, 'xl', '#9b5de5');
+    const banner = { 30: 'JUNK INCOMING', 45: 'MORE JUNK!!', 60: 'ALL JUNK. NO SCOOPS.' }[n];
+    if (banner) {
+      pop(banner, W / 2, H * 0.42, 'xl', '#9b5de5');
       sfx('siren');
       flash('#9b5de5', 0.4);
       confetti(W / 2, H * 0.45, 70);
@@ -586,18 +916,12 @@
 
   function miss(f) {
     if (f.kind === 'cherry') return;
-    if (f.kind === 'junk') {
-      // Junk is a bonus; missing it costs nothing but is still loud.
-      burst(f.x, H - 6, f.j.col, 14, 260);
-      sfx('whomp');
-      addShake(6);
-      return;
-    }
+    // Junk counts like a scoop: from 60 scoops it is all that falls.
     lives--;
     combo = 0;
     addShake(18);
     flash('#ff4d6d', 0.4);
-    burst(f.x, H - 6, f.f.c, 36, 420);
+    burst(f.x, H - 6, f.kind === 'junk' ? f.j.col : f.f.c, 36, 420);
     pop('SPLAT!', f.x, H - R * 2.4, 'xl', '#ff4d6d');
     sfx('splat');
     buzz([60, 40, 60]);

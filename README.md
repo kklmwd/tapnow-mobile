@@ -25,7 +25,7 @@ Model endpoints can be changed in Settings > Model endpoints if fal renames one.
 
 `public/scoops/index.html` is a standalone, endless ice cream stacking game, served at `./scoops/` on the deployed site.
 Hold one finger anywhere and slide to move the cone; catch falling scoops to build the tower, and land them dead centre for a "perfect" combo.
-Three misses melt the tower; tap to go again. Cherries give back a cone. From 30 scoops, junk (shoes, socks, boxers, rockets, anvils...) falls too: catching it is worth 3, missing it costs nothing.
+Three misses melt the tower; tap to go again. Cherries give back a cone. From 30 scoops, junk falls too (29 kinds: pets, poop, sushi, a Poké Ball, game swords and guns, pizza...): 40% of drops at 30 scoops, 80% at 45, all of them from 60. Junk is worth 3 and missing it costs a life like a scoop.
 There is a beat whose tempo follows the speed, plus shake, flashes, hit-stop and callouts on every catch; the speaker button mutes. No build step or dependencies.
 
 ## Develop
