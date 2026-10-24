@@ -155,9 +155,15 @@
   function initAudio() {
     if (audio) return;
     try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    // Fast limiter so stacked hits and effects never clip.
     const comp = audio.createDynamicsCompressor();
+    comp.threshold.value = -14;
+    comp.knee.value = 4;
+    comp.ratio.value = 20;
+    comp.attack.value = 0.001;
+    comp.release.value = 0.12;
     master = audio.createGain();
-    master.gain.value = muted ? 0 : 0.9;
+    master.gain.value = muted ? 0 : 0.7;
     master.connect(comp).connect(audio.destination);
     noiseBuf = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
     const d = noiseBuf.getChannelData(0);
@@ -232,22 +238,82 @@
   const sfx = (name, ...a) => { if (audio) SFX[name](...a); };
   const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 
-  // A little beat while playing; tempo climbs with the speed tier.
-  const BASS = [110, 110, 130.8, 146.8, 164.8, 146.8, 130.8, 98];
+  // Frantic arcade soundtrack: an original 16-step loop in the spirit of
+  // Japanese party-game music (four-on-the-floor kick, claps, ska off-beat
+  // brass stabs, slap octave bass, cowbell, a square-wave lead and snare-roll
+  // fills). The tempo climbs and the key rises a semitone with each speed step.
+  const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  // I - vi - IV - V in C: chord tones (semitones from C) and bass roots.
+  const CHORDS = [[0, 4, 7], [9, 12, 16], [5, 9, 12], [7, 11, 14]];
+  const ROOTS = [0, -3, 5, 7];
+  // Lead melody, one row per bar of 16 steps (semitones above C5, null rests).
+  const _ = null;
+  const LEAD = [
+    [12, _, 7, _, 9, _, 7, 4, _, 4, 7, _, 12, _, 14, _],
+    [16, _, 14, 12, _, 9, _, 12, 9, _, 7, _, 4, _, _, _],
+    [5, _, 9, _, 12, _, 9, 5, _, 5, 9, 12, 17, _, 16, _],
+    [14, _, 11, _, 7, _, 11, 14, 19, _, 17, 14, 11, 7, _, _],
+  ];
+  // Slap bass on 8ths: root / octave pops / fifth.
+  const BASS_STEPS = [0, 12, 0, 12, 7, 12, 0, 10];
   let nextStep = 0, step = 0;
   const kickQ = [];
   function music() {
     if (!audio || muted || state !== 'play') return;
     const lvl = tier(stack.length);
-    const stepDur = 60 / Math.min(184, 112 + lvl * 6) / 2;
+    const bpm = Math.min(200, 150 + lvl * 3);
+    const stepDur = 60 / bpm / 4;
+    const key = Math.min(lvl, 7);
     if (nextStep < audio.currentTime) nextStep = audio.currentTime + 0.05;
     while (nextStep < audio.currentTime + 0.12) {
-      const t = nextStep, s = step % 8;
-      if (s === 0 || s === 4 || (lvl >= 4 && s === 7)) { tone(150, 0.16, 'sine', 0.22, 0.28, t); kickQ.push(t); }
-      if (s === 2 || s === 6) { noise(0.12, 0.07, 'bandpass', 1800, 0, t); tone(200, 0.07, 'triangle', 0.035, 0.6, t); }
-      noise(0.03, s % 2 ? 0.015 : 0.03, 'highpass', 7000, 0, t);
-      if (s % 2 === 0) tone(BASS[(step >> 1) % 8], 0.18, 'triangle', 0.07, 1, t);
-      if (combo >= 3) tone(note(((step * 3) % 10) + 5), 0.07, 'square', 0.018, 1, t);
+      const t = nextStep, s = step % 16, bar = Math.floor(step / 16) % 4;
+      const fill = bar === 3 && s >= 12 && Math.floor(step / 64) % 2 === 1;
+      // Drums.
+      if (s % 4 === 0 || s === 10 || (lvl >= 6 && s === 14)) {
+        tone(165, 0.17, 'sine', 0.26, 0.25, t);
+        noise(0.015, 0.06, 'highpass', 3000, 0, t);
+        kickQ.push(t);
+      }
+      if (fill) {
+        noise(0.08, 0.04 + (s - 12) * 0.025, 'bandpass', 1900, 0, t);
+        tone(260 - (s - 12) * 35, 0.1, 'triangle', 0.06, 0.7, t);
+      } else if (s === 4 || s === 12) {
+        noise(0.14, 0.12, 'bandpass', 1800, 0, t);
+        tone(190, 0.08, 'triangle', 0.05, 0.6, t);
+        for (let k = 0; k < 3; k++) noise(0.02, 0.07, 'highpass', 1200, 0, t + k * 0.011);
+      } else if (s === 7 || s === 15) {
+        noise(0.05, 0.025, 'bandpass', 2000, 0, t);
+      }
+      if (s % 4 === 2) noise(0.11, 0.028, 'highpass', 7000, 0, t);
+      else noise(0.025, s % 2 ? 0.014 : 0.024, 'highpass', 8000, 0, t);
+      if (s === 3 || s === 6 || s === 11 || (lvl >= 3 && s === 14)) {
+        tone(810, 0.1, 'square', 0.02, 1, t);
+        tone(545, 0.1, 'square', 0.02, 1, t);
+      }
+      // Slap bass.
+      if (s % 2 === 0) {
+        const m = 36 + key + ROOTS[bar] + BASS_STEPS[s / 2];
+        tone(midi(m), 0.13, 'sawtooth', 0.065, 0.97, t);
+        if (BASS_STEPS[s / 2] === 12) tone(midi(m + 12), 0.04, 'square', 0.03, 1, t);
+      }
+      // Ska off-beat brass stabs.
+      if (s % 4 === 2) {
+        for (const c of CHORDS[bar]) {
+          tone(midi(60 + key + c), 0.09, 'sawtooth', 0.02, 1, t);
+          tone(midi(60 + key + c) * 1.006, 0.09, 'square', 0.012, 1, t);
+        }
+      }
+      // Lead, an octave up in fever.
+      const ln = LEAD[bar][s];
+      if (ln !== null) {
+        let len = 1;
+        while (s + len < 16 && LEAD[bar][s + len] === null && len < 3) len++;
+        const m = 72 + key + ln + (combo >= 3 ? 12 : 0);
+        tone(midi(m), stepDur * len * 0.95, 'square', 0.03, 1, t);
+        tone(midi(m) * 1.004, stepDur * len * 0.95, 'square', 0.018, 1, t);
+      }
+      // Fever adds a fast arpeggio on top.
+      if (combo >= 3) tone(midi(84 + key + CHORDS[bar][s % 3]), 0.05, 'triangle', 0.02, 1, t);
       step++;
       nextStep += stepDur;
     }
@@ -264,7 +330,7 @@
     if (Math.hypot(e.clientX - rect.left - mb.x, e.clientY - rect.top - mb.y) < 26) {
       muted = !muted;
       store('wobble-seal-muted', muted ? '1' : '0');
-      if (master) master.gain.value = muted ? 0 : 0.9;
+      if (master) master.gain.value = muted ? 0 : 0.7;
       return;
     }
     if (state === 'title') { state = 'play'; stateT = 0; sfx('chime'); }
