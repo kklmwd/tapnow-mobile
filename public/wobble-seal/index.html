@@ -349,7 +349,10 @@
     if (!holding) return;
     // Relative drag, so the finger never has to cover the tower.
     const c = topCx();
-    cone.tx = clamp(holdCone + (e.clientX - holdX) * 1.2, R - c, W - R - c);
+    const want = holdCone + (e.clientX - holdX) * 1.38;
+    cone.tx = clamp(want, R - c, W - R - c);
+    // Re-anchor at the edges so reversing responds at once, with no dead zone.
+    if (cone.tx !== want) { holdX = e.clientX; holdCone = cone.tx; }
   });
   const release = () => { holding = false; };
   cvs.addEventListener('pointerup', release);
@@ -1075,7 +1078,7 @@
     const c = topCx();
     const n = stack.length;
     cone.tx = clamp(cone.tx, R - c, W - R - c);
-    cone.x += (cone.tx - cone.x) * (1 - Math.exp((-dt * 26) / (1 + n * 0.05)));
+    cone.x += (cone.tx - cone.x) * (1 - Math.exp((-dt * 29.9) / (1 + n * 0.05)));
     const vel = (cone.x - cone.px) / Math.max(dt, 1e-3);
     const reach = Math.min(R * 4, R * (1.3 + n * 0.06));
     const idle = Math.sin(time * 1.7) * Math.min(R * 1.5, n * R * 0.035);
