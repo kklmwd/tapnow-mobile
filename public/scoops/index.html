@@ -174,9 +174,17 @@
   cvs.addEventListener('contextmenu', (e) => e.preventDefault());
 
   // ---------- game ----------
+  // Speed tier from the tower height: flat for the first 10 scoops, then one
+  // step every 5 scoops, and from 20 scoops one step every 3.
+  function tier(n) {
+    if (n < 10) return 0;
+    if (n < 20) return 1 + Math.floor((n - 10) / 5);
+    return 3 + Math.floor((n - 20) / 3);
+  }
+
   function spawn() {
     const cherry = lives < 3 && score > 4 && Math.random() < 0.09;
-    const speedK = 0.27 + Math.min(score, 140) * 0.0036;
+    const speedK = Math.min(0.27 * (1 + tier(stack.length) * 0.12), 1.1);
     falling.push({
       kind: cherry ? 'cherry' : 'scoop',
       f: FLAVORS[(Math.random() * FLAVORS.length) | 0],
@@ -214,6 +222,7 @@
     combo = perfect ? combo + 1 : 0;
     const prev = topCx();
     stack.push({ cx: prev + (perfect ? 0 : dx * 0.85), f: f.f, spr: f.spr, seed: f.seed, sq: 0.62 });
+    if (tier(stack.length) > tier(stack.length - 1)) pop('faster', W / 2, H * 0.2, true);
     score += 1 + (perfect ? Math.min(combo - 1, 4) : 0);
     const y = toScreenY(scoopWorldY(stack.length - 1));
     burst(scoopX(stack.length - 1), y + R * 0.4, f.f.c, perfect ? 12 : 6, perfect ? 240 : 140);
@@ -278,10 +287,11 @@
 
     if (state === 'play') {
       spawnT -= dt;
-      const maxAir = 1 + Math.min(2, Math.floor(score / 18));
+      const lvl = tier(stack.length);
+      const maxAir = 1 + Math.min(2, Math.floor(lvl / 3));
       if (spawnT <= 0 && falling.length < maxAir) {
         spawn();
-        spawnT = Math.max(0.42, 1.45 - score * 0.016) * rand(0.85, 1.2);
+        spawnT = Math.max(0.42, 1.45 - lvl * 0.09) * rand(0.85, 1.2);
       }
       for (let k = falling.length - 1; k >= 0; k--) {
         const f = falling[k];
