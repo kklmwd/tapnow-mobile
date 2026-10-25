@@ -1,6 +1,6 @@
 import { TIMEZONE } from '../config.mjs';
 
-const UA = 'pickleball-tracker (personal use; github.com/kklmwd/tapnow-mobile)';
+const UA = 'pickleball-tracker (personal use; github.com/kklmwd/pickleball-tracker)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // GET with a polite delay between calls and one retry on 429/5xx.

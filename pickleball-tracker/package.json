@@ -1,0 +1,12 @@
+{
+  "name": "pickleball-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tracks pickleball sessions in East Singapore and Jalan Kayu from Playtomic and Reclub",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test",
+    "scrape": "node scrape.mjs --out out --raw"
+  }
+}

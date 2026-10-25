@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Usage: node pickleball-tracker/scrape.mjs [--out dir] [--raw]
+// Usage: node scrape.mjs [--out dir] [--raw]
 // Writes sessions.json and SESSIONS.md to the out dir (default ./out),
 // plus raw API responses under raw/ with --raw.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';

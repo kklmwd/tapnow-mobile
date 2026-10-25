@@ -19,11 +19,19 @@ first appeared on the latest run. Each run's page under Actions also shows the s
 ## Run it
 
 ```
-node pickleball-tracker/scrape.mjs --out out --raw   # Node 22, no npm packages
-node --test pickleball-tracker/test.mjs
+npm test          # unit tests (Node 22, no npm packages to install)
+npm run scrape    # live run into out/, with raw API responses in out/raw/
 ```
 
-`--raw` saves every API response under `out/raw/`. In Actions these are uploaded as the `raw-responses` artifact.
+In Actions, the raw responses are uploaded as the `raw-responses` artifact.
+
+## With Claude Code
+
+Open this folder in Claude Code. `CLAUDE.md` explains the code, and these slash commands are included:
+
+- `/sessions <question>`: e.g. `/sessions saturday evening tampines` or `/sessions open spots tonight`. Answers from the latest results.
+- `/add-club <reclub link or slug>`: tracks another Reclub group.
+- `/fix-parsers`: fits the Playtomic/Reclub parsers to real responses (run it after the first real run).
 
 ## Change what it tracks
 

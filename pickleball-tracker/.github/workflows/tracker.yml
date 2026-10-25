@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test pickleball-tracker/test.mjs
+      - run: npm test
 
       - name: Check out the data branch (created on first run)
         run: |
@@ -36,7 +36,7 @@ jobs:
           fi
 
       - name: Scrape
-        run: node pickleball-tracker/scrape.mjs --out data --raw
+        run: node scrape.mjs --out data --raw
 
       - name: Show results on the run page
         if: always()

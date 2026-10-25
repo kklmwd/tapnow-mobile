@@ -1,13 +1,13 @@
-// node --test pickleball-tracker/test.mjs
+// npm test
 // Fixtures follow the expected response shapes; they are not captured from
 // the live sites.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { matchArea } from './lib/areas.mjs';
-import { toDate, sgIso } from './lib/util.mjs';
-import { courtRows, matchRows, tenantVenue } from './lib/playtomic.mjs';
-import { unflatten, findMeets, meetRow, payloadFromHtml } from './lib/reclub.mjs';
-import { renderMarkdown } from './lib/render.mjs';
+import { matchArea } from '../lib/areas.mjs';
+import { toDate, sgIso } from '../lib/util.mjs';
+import { courtRows, matchRows, tenantVenue } from '../lib/playtomic.mjs';
+import { unflatten, findMeets, meetRow, payloadFromHtml } from '../lib/reclub.mjs';
+import { renderMarkdown } from '../lib/render.mjs';
 
 test('areas: names, postal sectors and coordinates', () => {
   assert.equal(matchArea({ text: 'The Sports Arina @ Jalan Kayu' }), 'Jalan Kayu');
